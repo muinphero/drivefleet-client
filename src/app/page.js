@@ -1,20 +1,23 @@
+"use client";
+
+import { useAuth } from "@/hooks/useAuth";
+
 export default function Home() {
+  const { user, isPending } = useAuth();
+
+  if (isPending) {
+    return <h1>Loading...</h1>;
+  }
+
   return (
     <section className="container-width py-20">
-      <div className="max-w-3xl">
-        <h1 className="text-5xl font-bold leading-tight">
-          Rent Premium Cars With Confidence
-        </h1>
+      <h1 className="text-5xl font-bold">DriveFleet</h1>
 
-        <p className="mt-6 text-lg text-gray-600">
-          Explore luxury, SUV, sedan, and family cars at affordable daily rental
-          prices.
-        </p>
-
-        <button className="mt-8 bg-blue-600 text-white px-6 py-3 rounded-xl">
-          Explore Cars
-        </button>
-      </div>
+      {user ? (
+        <p className="mt-6 text-xl">Welcome {user.name}</p>
+      ) : (
+        <p className="mt-6 text-xl">No user logged in</p>
+      )}
     </section>
   );
 }
