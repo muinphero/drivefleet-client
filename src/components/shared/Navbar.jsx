@@ -11,6 +11,7 @@ export default function Navbar() {
 
           <Link href="/explore-cars">Explore Cars</Link>
           <Link href="/add-car">Add Car</Link>
+          <Link href="/my-cars">My Cars</Link>
 
           <Link href="/login">Login</Link>
           <Link href="/register">Register</Link>
