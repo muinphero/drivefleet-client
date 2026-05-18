@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import Link from "next/link";
 export default function ExploreCarsPage() {
   const [cars, setCars] = useState([]);
 
@@ -66,10 +66,12 @@ export default function ExploreCarsPage() {
               <p>Bookings: {car.bookingCount}</p>
 
               <p>Added by: {car.ownerName}</p>
-
-              <button className="w-full bg-blue-600 text-white py-3 rounded-xl">
+              <Link
+                href={`/car/${car._id}`}
+                className="block text-center bg-blue-600 text-white py-3 rounded-xl"
+              >
                 View Details
-              </button>
+              </Link>
             </div>
           </div>
         ))}
