@@ -57,8 +57,15 @@ export default function MyCarsPage() {
     try {
       const response = await fetch(`http://localhost:5001/api/cars/${id}`, {
         method: "DELETE",
-      });
 
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          email: user.email,
+        }),
+      });
       const data = await response.json();
 
       if (!response.ok) {

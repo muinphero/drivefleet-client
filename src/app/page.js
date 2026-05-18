@@ -1,23 +1,21 @@
-"use client";
+import HeroSection from "@/components/home/HeroSection";
 
-import { useAuth } from "@/hooks/useAuth";
+import FeaturedCars from "@/components/home/FeaturedCars";
+
+import WhyChooseUs from "@/components/home/WhyChooseUs";
+
+import CallToAction from "@/components/home/CallToAction";
 
 export default function Home() {
-  const { user, isPending } = useAuth();
-
-  if (isPending) {
-    return <h1>Loading...</h1>;
-  }
-
   return (
-    <section className="container-width py-20">
-      <h1 className="text-5xl font-bold">DriveFleet</h1>
+    <>
+      <HeroSection />
 
-      {user ? (
-        <p className="mt-6 text-xl">Welcome {user.name}</p>
-      ) : (
-        <p className="mt-6 text-xl">No user logged in</p>
-      )}
-    </section>
+      <FeaturedCars />
+
+      <WhyChooseUs />
+
+      <CallToAction />
+    </>
   );
 }
