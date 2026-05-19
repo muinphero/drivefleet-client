@@ -2,12 +2,22 @@
 
 import { useState } from "react";
 
+import Link from "next/link";
+
+import { useRouter } from "next/navigation";
+
+import { FcGoogle } from "react-icons/fc";
+
 import { authClient } from "@/lib/auth-client";
 
 import { toast } from "sonner";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [loading, setLoading] = useState(false);
+
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -19,59 +29,128 @@ export default function LoginPage() {
     const formData = new FormData(form);
 
     const email = formData.get("email");
+
     const password = formData.get("password");
 
-    const { data, error } = await authClient.signIn.email({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email,
 
-    if (error) {
-      toast.error(error.message || "Login failed");
+        password,
 
+        callbackURL: "/",
+      });
+
+      if (error) {
+        toast.error(error.message || "Login failed");
+
+        setLoading(false);
+
+        return;
+      }
+
+      toast.success("Login successful");
+
+      console.log(data);
+
+      form.reset();
+
+      router.push("/");
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Something went wrong");
+    } finally {
       setLoading(false);
-
-      return;
     }
+  };
 
-    toast.success("Login successful");
+  const handleGoogleLogin = async () => {
+    try {
+      setGoogleLoading(true);
 
-    console.log(data);
+      await authClient.signIn.social({
+        provider: "google",
 
-    form.reset();
+        callbackURL: "http://localhost:3000",
+      });
+    } catch (error) {
+      console.error(error);
 
-    setLoading(false);
+      toast.error("Google login failed");
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   return (
-    <section className="container-width py-20">
-      <div className="max-w-md mx-auto border rounded-2xl p-8">
-        <h1 className="text-3xl font-bold mb-6">Login</h1>
+    <section className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 py-16">
+      <div className="w-full max-w-md border rounded-3xl p-8 shadow-sm bg-white">
+        {/* HEADER */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">Welcome Back</h1>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+          <p className="text-gray-500">Login to your DriveFleet account</p>
+        </div>
+
+        {/* LOGIN FORM */}
+        <form onSubmit={handleLogin} className="space-y-5">
           <input
             name="email"
             type="email"
             placeholder="Email"
-            className="w-full border p-3 rounded-xl"
             required
+            className="w-full border p-4 rounded-2xl outline-none focus:border-blue-500"
           />
 
           <input
             name="password"
             type="password"
             placeholder="Password"
-            className="w-full border p-3 rounded-xl"
             required
+            className="w-full border p-4 rounded-2xl outline-none focus:border-blue-500"
           />
 
           <button
+            type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-xl"
+            className="w-full bg-blue-600 hover:bg-blue-700 transition text-white py-4 rounded-2xl font-semibold disabled:opacity-50"
           >
-            {loading ? "Loading..." : "Login"}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        {/* DIVIDER */}
+        <div className="flex items-center gap-4 my-6">
+          <div className="flex-1 h-px bg-gray-200" />
+
+          <span className="text-gray-400 text-sm">OR</span>
+
+          <div className="flex-1 h-px bg-gray-200" />
+        </div>
+
+        {/* GOOGLE LOGIN */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={googleLoading}
+          className="w-full border py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-gray-50 transition font-medium disabled:opacity-50"
+        >
+          <FcGoogle size={24} />
+
+          {googleLoading ? "Redirecting..." : "Continue with Google"}
+        </button>
+
+        {/* REGISTER */}
+        <p className="text-center mt-8 text-gray-600">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/register"
+            className="text-blue-600 font-semibold hover:underline"
+          >
+            Register
+          </Link>
+        </p>
       </div>
     </section>
   );

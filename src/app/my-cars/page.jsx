@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 
-import Link from "next/link";
+import Image from "next/image";
 
-import { useAuth } from "@/hooks/useAuth";
+import Link from "next/link";
 
 import { useRouter } from "next/navigation";
 
 import { toast } from "sonner";
+
+import { useAuth } from "@/hooks/useAuth";
 
 export default function MyCarsPage() {
   const { user, isPending } = useAuth();
@@ -19,6 +21,11 @@ export default function MyCarsPage() {
 
   const [loading, setLoading] = useState(true);
 
+  const [selectedCarId, setSelectedCarId] = useState(null);
+
+  const [showModal, setShowModal] = useState(false);
+
+  // FETCH USER CARS
   useEffect(() => {
     if (!isPending && !user) {
       router.push("/login");
@@ -37,6 +44,8 @@ export default function MyCarsPage() {
         setCars(data);
       } catch (error) {
         console.error(error);
+
+        toast.error("Failed to fetch cars");
       } finally {
         setLoading(false);
       }
@@ -47,41 +56,45 @@ export default function MyCarsPage() {
     }
   }, [user, isPending, router]);
 
-  const handleDelete = async (id) => {
-    const confirmDelete = confirm("Are you sure?");
+  // OPEN DELETE MODAL
+  const openDeleteModal = (carId) => {
+    setSelectedCarId(carId);
 
-    if (!confirmDelete) {
-      return;
-    }
+    setShowModal(true);
+  };
 
+  // DELETE CAR
+  const handleDeleteCar = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/cars/${id}`, {
-        method: "DELETE",
-
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `http://localhost:5001/api/cars/${selectedCarId}?email=${user.email}`,
+        {
+          method: "DELETE",
         },
+      );
 
-        body: JSON.stringify({
-          email: user.email,
-        }),
-      });
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.message);
       }
 
-      setCars((prev) => prev.filter((car) => car._id !== id));
+      // REMOVE FROM UI
+      setCars((prev) => prev.filter((car) => car._id !== selectedCarId));
 
-      toast.success("Car deleted");
+      toast.success("Car deleted successfully");
+
+      setShowModal(false);
+
+      setSelectedCarId(null);
     } catch (error) {
       console.error(error);
 
-      toast.error("Delete failed");
+      toast.error(error.message || "Failed to delete car");
     }
   };
 
+  // LOADING
   if (loading || isPending) {
     return (
       <section className="container-width py-20">
@@ -97,62 +110,97 @@ export default function MyCarsPage() {
       {cars.length === 0 ? (
         <h2 className="text-2xl">No cars added yet</h2>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-4 border">Image</th>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {cars.map((car) => (
+            <div
+              key={car._id}
+              className="border rounded-2xl overflow-hidden bg-white"
+            >
+              {/* IMAGE */}
+              <div className="relative w-full h-60">
+                <Image
+                  src={
+                    car.imageUrl ||
+                    "https://images.unsplash.com/photo-1503376780353-7e6692767b70"
+                  }
+                  alt={`${car.brand} ${car.model}` || "Car image"}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+              </div>
 
-                <th className="p-4 border">Car</th>
+              {/* CONTENT */}
+              <div className="p-5 space-y-3">
+                <h2 className="text-2xl font-bold">
+                  {car.brand} {car.model}
+                </h2>
 
-                <th className="p-4 border">Price</th>
+                <p>Type: {car.vehicleType}</p>
 
-                <th className="p-4 border">Bookings</th>
+                <p>Daily Price: ${car.dailyRentalPrice}</p>
 
-                <th className="p-4 border">Actions</th>
-              </tr>
-            </thead>
+                <p>
+                  Availability:{" "}
+                  <span
+                    className={
+                      car.availability
+                        ? "text-green-600 font-semibold"
+                        : "text-red-500 font-semibold"
+                    }
+                  >
+                    {car.availability ? "Available" : "Unavailable"}
+                  </span>
+                </p>
 
-            <tbody>
-              {cars.map((car) => (
-                <tr key={car._id}>
-                  <td className="p-4 border">
-                    <img
-                      src={car.imageUrl}
-                      alt={car.model}
-                      className="w-24 h-16 object-cover rounded"
-                    />
-                  </td>
+                <p>Bookings: {car.bookingCount}</p>
 
-                  <td className="p-4 border">
-                    {car.brand} {car.model}
-                  </td>
+                {/* ACTION BUTTONS */}
+                <div className="flex gap-4 pt-2">
+                  <Link
+                    href={`/update-car/${car._id}`}
+                    className="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl transition"
+                  >
+                    Update
+                  </Link>
 
-                  <td className="p-4 border">${car.dailyRentalPrice}</td>
+                  <button
+                    onClick={() => openDeleteModal(car._id)}
+                    className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-                  <td className="p-4 border">{car.bookingCount}</td>
+      {/* DELETE MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md space-y-6">
+            <h2 className="text-2xl font-bold">Delete Car</h2>
 
-                  <td className="p-4 border">
-                    <div className="flex gap-3">
-                      <Link
-                        href={`/update-car/${car._id}`}
-                        className="bg-blue-600 text-white px-4 py-2 rounded"
-                      >
-                        Update
-                      </Link>
+            <p>Are you sure you want to delete this car?</p>
 
-                      <button
-                        onClick={() => handleDelete(car._id)}
-                        className="bg-red-500 text-white px-4 py-2 rounded"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-5 py-2 border rounded-xl"
+              >
+                Close
+              </button>
+
+              <button
+                onClick={handleDeleteCar}
+                className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>

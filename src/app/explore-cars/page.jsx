@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import Link from "next/link";
+
+import Image from "next/image";
+
 export default function ExploreCarsPage() {
   const [cars, setCars] = useState([]);
 
@@ -46,6 +50,7 @@ export default function ExploreCarsPage() {
 
     fetchCars();
   }, [search, availability, sort]);
+
   if (loading) {
     return (
       <section className="container-width py-20">
@@ -65,6 +70,8 @@ export default function ExploreCarsPage() {
   return (
     <section className="container-width py-20">
       <h1 className="text-5xl font-bold mb-10">Explore Cars</h1>
+
+      {/* FILTERS */}
       <div className="grid md:grid-cols-3 gap-4 mb-10">
         <input
           type="text"
@@ -96,15 +103,29 @@ export default function ExploreCarsPage() {
           <option value="desc">High to Low</option>
         </select>
       </div>
+
+      {/* CAR GRID */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {cars.map((car) => (
-          <div key={car._id} className="border rounded-2xl overflow-hidden">
-            <img
-              src={car.imageUrl}
-              alt={car.model}
-              className="w-full h-60 object-cover"
-            />
+          <div
+            key={car._id}
+            className="border rounded-2xl overflow-hidden bg-white"
+          >
+            {/* IMAGE */}
+            <div className="relative w-full h-60">
+              <Image
+                src={
+                  car.imageUrl ||
+                  "https://images.unsplash.com/photo-1503376780353-7e6692767b70"
+                }
+                alt={car.model}
+                fill
+                unoptimized
+                className="object-cover"
+              />
+            </div>
 
+            {/* CONTENT */}
             <div className="p-5 space-y-3">
               <h2 className="text-2xl font-bold">
                 {car.brand} {car.model}
@@ -114,9 +135,23 @@ export default function ExploreCarsPage() {
 
               <p>Daily Price: ${car.dailyRentalPrice}</p>
 
-              <p>Bookings: {car.bookingCount}</p>
+              <p>Bookings: {car.bookingCount || 0}</p>
 
               <p>Added by: {car.ownerName}</p>
+
+              <p>
+                Status:{" "}
+                <span
+                  className={
+                    car.availability
+                      ? "text-green-600 font-semibold"
+                      : "text-red-600 font-semibold"
+                  }
+                >
+                  {car.availability ? "Available" : "Unavailable"}
+                </span>
+              </p>
+
               <Link
                 href={`/car/${car._id}`}
                 className="block text-center bg-blue-600 text-white py-3 rounded-xl"

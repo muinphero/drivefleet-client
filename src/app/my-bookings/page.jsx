@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-import { useAuth } from "@/hooks/useAuth";
+import Image from "next/image";
 
 import { useRouter } from "next/navigation";
 
 import { toast } from "sonner";
+
+import { useAuth } from "@/hooks/useAuth";
 
 export default function MyBookingsPage() {
   const { user, isPending } = useAuth();
@@ -17,6 +19,11 @@ export default function MyBookingsPage() {
 
   const [loading, setLoading] = useState(true);
 
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+
+  const [showModal, setShowModal] = useState(false);
+
+  // FETCH BOOKINGS
   useEffect(() => {
     if (!isPending && !user) {
       router.push("/login");
@@ -35,6 +42,8 @@ export default function MyBookingsPage() {
         setBookings(data);
       } catch (error) {
         console.error(error);
+
+        toast.error("Failed to fetch bookings");
       } finally {
         setLoading(false);
       }
@@ -45,16 +54,18 @@ export default function MyBookingsPage() {
     }
   }, [user, isPending, router]);
 
-  const handleCancelBooking = async (bookingId) => {
-    const confirmCancel = confirm("Cancel this booking?");
+  // OPEN MODAL
+  const openCancelModal = (bookingId) => {
+    setSelectedBookingId(bookingId);
 
-    if (!confirmCancel) {
-      return;
-    }
+    setShowModal(true);
+  };
 
+  // CANCEL BOOKING
+  const handleCancelBooking = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5001/api/bookings/${bookingId}`,
+        `http://localhost:5001/api/bookings/${selectedBookingId}`,
         {
           method: "DELETE",
 
@@ -67,24 +78,31 @@ export default function MyBookingsPage() {
           }),
         },
       );
+
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.message);
       }
 
+      // REMOVE FROM UI
       setBookings((prev) =>
-        prev.filter((booking) => booking._id !== bookingId),
+        prev.filter((booking) => booking._id !== selectedBookingId),
       );
 
       toast.success("Booking cancelled");
+
+      setShowModal(false);
+
+      setSelectedBookingId(null);
     } catch (error) {
       console.error(error);
 
-      toast.error("Failed to cancel booking");
+      toast.error(error.message || "Failed to cancel booking");
     }
   };
 
+  // LOADING
   if (loading || isPending) {
     return (
       <section className="container-width py-20">
@@ -104,14 +122,23 @@ export default function MyBookingsPage() {
           {bookings.map((booking) => (
             <div
               key={booking._id}
-              className="border rounded-2xl overflow-hidden"
+              className="border rounded-2xl overflow-hidden bg-white"
             >
-              <img
-                src={booking.carImage}
-                alt={booking.carModel}
-                className="w-full h-60 object-cover"
-              />
+              {/* IMAGE */}
+              <div className="relative w-full h-60">
+                <Image
+                  src={
+                    booking.carImage ||
+                    "https://images.unsplash.com/photo-1503376780353-7e6692767b70"
+                  }
+                  alt={booking.carModel || "Booked car image"}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+              </div>
 
+              {/* CONTENT */}
               <div className="p-5 space-y-3">
                 <h2 className="text-2xl font-bold">
                   {booking.carBrand} {booking.carModel}
@@ -127,14 +154,41 @@ export default function MyBookingsPage() {
                 </p>
 
                 <button
-                  onClick={() => handleCancelBooking(booking._id)}
-                  className="w-full bg-red-500 text-white py-3 rounded-xl"
+                  onClick={() => openCancelModal(booking._id)}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl transition"
                 >
                   Cancel Booking
                 </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* CUSTOM MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md space-y-6">
+            <h2 className="text-2xl font-bold">Cancel Booking</h2>
+
+            <p>Are you sure you want to cancel this booking?</p>
+
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-5 py-2 border rounded-xl"
+              >
+                Close
+              </button>
+
+              <button
+                onClick={handleCancelBooking}
+                className="px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl transition"
+              >
+                Confirm Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </section>
