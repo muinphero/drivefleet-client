@@ -7,10 +7,32 @@ export default function ExploreCarsPage() {
 
   const [loading, setLoading] = useState(true);
 
+  const [search, setSearch] = useState("");
+
+  const [availability, setAvailability] = useState("");
+
+  const [sort, setSort] = useState("");
+
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        const response = await fetch("http://localhost:5001/api/cars");
+        const queryParams = new URLSearchParams();
+
+        if (search) {
+          queryParams.append("search", search);
+        }
+
+        if (availability) {
+          queryParams.append("availability", availability);
+        }
+
+        if (sort) {
+          queryParams.append("sort", sort);
+        }
+
+        const response = await fetch(
+          `http://localhost:5001/api/cars?${queryParams.toString()}`,
+        );
 
         const data = await response.json();
 
@@ -23,8 +45,7 @@ export default function ExploreCarsPage() {
     };
 
     fetchCars();
-  }, []);
-
+  }, [search, availability, sort]);
   if (loading) {
     return (
       <section className="container-width py-20">
@@ -44,7 +65,37 @@ export default function ExploreCarsPage() {
   return (
     <section className="container-width py-20">
       <h1 className="text-5xl font-bold mb-10">Explore Cars</h1>
+      <div className="grid md:grid-cols-3 gap-4 mb-10">
+        <input
+          type="text"
+          placeholder="Search by brand or model"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border p-3 rounded-xl"
+        />
 
+        <select
+          value={availability}
+          onChange={(e) => setAvailability(e.target.value)}
+          className="border p-3 rounded-xl"
+        >
+          <option value="">All Cars</option>
+
+          <option value="available">Available Only</option>
+        </select>
+
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          className="border p-3 rounded-xl"
+        >
+          <option value="">Sort By Price</option>
+
+          <option value="asc">Low to High</option>
+
+          <option value="desc">High to Low</option>
+        </select>
+      </div>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {cars.map((car) => (
           <div key={car._id} className="border rounded-2xl overflow-hidden">
