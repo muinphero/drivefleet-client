@@ -36,7 +36,7 @@ export default function MyCarsPage() {
     const fetchCars = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5001/api/cars/owner/${user.email}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/cars/owner/${user.email}`,
         );
 
         const data = await response.json();
@@ -67,7 +67,7 @@ export default function MyCarsPage() {
   const handleDeleteCar = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5001/api/cars/${selectedCarId}?email=${user.email}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/cars/${selectedCarId}?email=${user.email}`,
         {
           method: "DELETE",
         },

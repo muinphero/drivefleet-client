@@ -34,9 +34,7 @@ export default function ExploreCarsPage() {
           queryParams.append("sort", sort);
         }
 
-        const response = await fetch(
-          `http://localhost:5001/api/cars?${queryParams.toString()}`,
-        );
+        const response = await fetch(`${API_URL}/cars?${queryParams.toString()}`,);
 
         const data = await response.json();
 

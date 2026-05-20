@@ -22,7 +22,9 @@ export default function UpdateCarPage() {
   useEffect(() => {
     const fetchCar = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/api/cars/${id}`);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/cars/${id}`,
+        );
 
         const data = await response.json();
 
@@ -67,19 +69,22 @@ export default function UpdateCarPage() {
     };
 
     try {
-      const response = await fetch(`http://localhost:5001/api/cars/${id}`, {
-        method: "PATCH",
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/cars/${id}`,
+        {
+          method: "PATCH",
 
-        headers: {
-          "Content-Type": "application/json",
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            email: car.ownerEmail,
+
+            updatedCar,
+          }),
         },
-
-        body: JSON.stringify({
-          email: car.ownerEmail,
-
-          updatedCar,
-        }),
-      });
+      );
 
       const data = await response.json();
 

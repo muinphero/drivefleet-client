@@ -2,7 +2,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import Providers from "@/providers/Providers";
-
+    
 import { HeroUIProvider } from "@heroui/react";
 
 import Navbar from "@/components/shared/Navbar";
