@@ -2,7 +2,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import Providers from "@/providers/Providers";
-import { AuthProvider } from "@/context/AuthProvider";
+import { AuthProvider } from "@/providers/AuthProvider";
 
 import { HeroUIProvider } from "@heroui/react";
 

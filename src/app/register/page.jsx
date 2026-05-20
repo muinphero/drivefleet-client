@@ -13,16 +13,16 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 
 export default function RegisterPage() {
-  const router = useRouter();
+  `${process.env.NEXT_PUBLIC_API_URL}/api/cars`;
 
-  const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
 
   const [googleLoading, setGoogleLoading] = useState(false);
-
+  const router = useRouter();
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    setLoading(true);
+    setFormLoading(true);
 
     const form = e.currentTarget;
 
@@ -40,7 +40,7 @@ export default function RegisterPage() {
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters");
 
-      setLoading(false);
+      setFormLoading(false);
 
       return;
     }
@@ -48,7 +48,7 @@ export default function RegisterPage() {
     if (!/[A-Z]/.test(password)) {
       toast.error("Password must contain at least one uppercase letter");
 
-      setLoading(false);
+      setFormLoading(false);
 
       return;
     }
@@ -56,7 +56,7 @@ export default function RegisterPage() {
     if (!/[a-z]/.test(password)) {
       toast.error("Password must contain at least one lowercase letter");
 
-      setLoading(false);
+      setFormLoading(false);
 
       return;
     }
@@ -71,13 +71,13 @@ export default function RegisterPage() {
 
         image,
 
-        callbackURL: "http://localhost:3000",
+        callbackURL: "/",
       });
 
       if (error) {
         toast.error(error.message || "Registration failed");
 
-        setLoading(false);
+        setFormLoading(false);
 
         return;
       }
@@ -94,7 +94,7 @@ export default function RegisterPage() {
 
       toast.error("Something went wrong");
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
@@ -105,7 +105,7 @@ export default function RegisterPage() {
       await authClient.signIn.social({
         provider: "google",
 
-        callbackURL: "http://localhost:3000",
+        callbackURL: "/",
       });
     } catch (error) {
       console.error(error);
@@ -176,10 +176,10 @@ export default function RegisterPage() {
           {/* SUBMIT BUTTON */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={formLoading}
             className="w-full bg-blue-600 hover:bg-blue-700 transition text-white py-4 rounded-2xl font-semibold disabled:opacity-50"
           >
-            {loading ? "Creating Account..." : "Register"}
+            {formLoading ? "Creating Account..." : "Register"}
           </button>
         </form>
 

@@ -9,16 +9,18 @@ import Image from "next/image";
 export default function ExploreCarsPage() {
   const [cars, setCars] = useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(true);
 
   const [search, setSearch] = useState("");
 
   const [availability, setAvailability] = useState("");
 
   const [sort, setSort] = useState("");
+  const [vehicleType, setVehicleType] = useState("");
 
   useEffect(() => {
     const fetchCars = async () => {
+      setPageLoading(true);
       try {
         const queryParams = new URLSearchParams();
 
@@ -30,26 +32,32 @@ export default function ExploreCarsPage() {
           queryParams.append("availability", availability);
         }
 
+        if (vehicleType) {
+          queryParams.append("vehicleType", vehicleType);
+        }
+
         if (sort) {
           queryParams.append("sort", sort);
         }
 
-        const response = await fetch(`${API_URL}/cars?${queryParams.toString()}`,);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/cars?${queryParams.toString()}`,
+        );
 
         const data = await response.json();
 
-        setCars(data);
+        setCars(Array.isArray(data) ? data : data.cars || []);
       } catch (error) {
         console.error(error);
       } finally {
-        setLoading(false);
+        setPageLoading(false);
       }
     };
 
     fetchCars();
-  }, [search, availability, sort]);
+  }, [search, availability, sort, vehicleType]);
 
-  if (loading) {
+  if (pageLoading) {
     return (
       <section className="container-width py-20">
         <h1 className="text-3xl font-bold">Loading cars...</h1>
@@ -87,6 +95,22 @@ export default function ExploreCarsPage() {
           <option value="">All Cars</option>
 
           <option value="available">Available Only</option>
+        </select>
+
+        <select
+          value={vehicleType}
+          onChange={(e) => setVehicleType(e.target.value)}
+          className="border p-3 rounded-xl"
+        >
+          <option value="">All Types</option>
+
+          <option value="SUV">SUV</option>
+
+          <option value="Sedan">Sedan</option>
+
+          <option value="Sports">Sports</option>
+
+          <option value="Luxury">Luxury</option>
         </select>
 
         <select

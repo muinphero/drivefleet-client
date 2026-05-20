@@ -13,16 +13,16 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 
 export default function LoginPage() {
+  `${process.env.NEXT_PUBLIC_API_URL}/api/cars`;
+
+  const [formLoading, setFormLoading] = useState(false);
   const router = useRouter();
-
-  const [loading, setLoading] = useState(false);
-
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    setLoading(true);
+    setFormLoading(true);
 
     const form = e.currentTarget;
 
@@ -44,7 +44,7 @@ export default function LoginPage() {
       if (error) {
         toast.error(error.message || "Login failed");
 
-        setLoading(false);
+        setFormLoading(false);
 
         return;
       }
@@ -61,7 +61,7 @@ export default function LoginPage() {
 
       toast.error("Something went wrong");
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
@@ -72,7 +72,7 @@ export default function LoginPage() {
       await authClient.signIn.social({
         provider: "google",
 
-        callbackURL: "http://localhost:3000",
+        callbackURL: process.env.NEXT_PUBLIC_CLIENT_URL,
       });
     } catch (error) {
       console.error(error);
@@ -113,10 +113,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={formLoading}
             className="w-full bg-blue-600 hover:bg-blue-700 transition text-white py-4 rounded-2xl font-semibold disabled:opacity-50"
           >
-            {loading ? "Logging in..." : "Login"}
+            {formLoading ? "Logging in..." : "Login"}
           </button>
         </form>
 

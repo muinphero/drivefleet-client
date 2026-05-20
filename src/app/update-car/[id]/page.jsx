@@ -6,16 +6,19 @@ import { useParams, useRouter } from "next/navigation";
 
 import { toast } from "sonner";
 
+import PrivateRoute from "@/components/PrivateRoute";
+
 export default function UpdateCarPage() {
   const params = useParams();
 
   const id = params.id;
-
   const router = useRouter();
+
+  `${process.env.NEXT_PUBLIC_API_URL}/api/cars`;
 
   const [car, setCar] = useState(null);
 
-  const [loading, setLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(true);
 
   const [updateLoading, setUpdateLoading] = useState(false);
 
@@ -32,7 +35,7 @@ export default function UpdateCarPage() {
       } catch (error) {
         console.error(error);
       } finally {
-        setLoading(false);
+        setPageLoading(false);
       }
     };
 
@@ -74,13 +77,13 @@ export default function UpdateCarPage() {
         {
           method: "PATCH",
 
+          credentials: "include",
+
           headers: {
             "Content-Type": "application/json",
           },
 
           body: JSON.stringify({
-            email: car.ownerEmail,
-
             updatedCar,
           }),
         },
@@ -104,7 +107,7 @@ export default function UpdateCarPage() {
     }
   };
 
-  if (loading) {
+  if (pageLoading) {
     return (
       <section className="container-width py-20">
         <h1 className="text-3xl font-bold">Loading...</h1>
@@ -121,85 +124,87 @@ export default function UpdateCarPage() {
   }
 
   return (
-    <section className="container-width py-20">
-      <div className="max-w-2xl mx-auto border rounded-2xl p-8">
-        <h1 className="text-4xl font-bold mb-8">Update Car</h1>
+    <PrivateRoute>
+      <section className="container-width py-20">
+        <div className="max-w-2xl mx-auto border rounded-2xl p-8">
+          <h1 className="text-4xl font-bold mb-8">Update Car</h1>
 
-        <form onSubmit={handleUpdate} className="space-y-4">
-          <input
-            name="model"
-            type="text"
-            defaultValue={car.model}
-            className="w-full border p-3 rounded-xl"
-            required
-          />
+          <form onSubmit={handleUpdate} className="space-y-4">
+            <input
+              name="model"
+              type="text"
+              defaultValue={car.model}
+              className="w-full border p-3 rounded-xl"
+              required
+            />
 
-          <input
-            name="brand"
-            type="text"
-            defaultValue={car.brand}
-            className="w-full border p-3 rounded-xl"
-            required
-          />
+            <input
+              name="brand"
+              type="text"
+              defaultValue={car.brand}
+              className="w-full border p-3 rounded-xl"
+              required
+            />
 
-          <input
-            name="dailyRentalPrice"
-            type="number"
-            defaultValue={car.dailyRentalPrice}
-            className="w-full border p-3 rounded-xl"
-            required
-          />
+            <input
+              name="dailyRentalPrice"
+              type="number"
+              defaultValue={car.dailyRentalPrice}
+              className="w-full border p-3 rounded-xl"
+              required
+            />
 
-          <input
-            name="vehicleType"
-            type="text"
-            defaultValue={car.vehicleType}
-            className="w-full border p-3 rounded-xl"
-            required
-          />
+            <input
+              name="vehicleType"
+              type="text"
+              defaultValue={car.vehicleType}
+              className="w-full border p-3 rounded-xl"
+              required
+            />
 
-          <input
-            name="registrationNumber"
-            type="text"
-            defaultValue={car.registrationNumber}
-            className="w-full border p-3 rounded-xl"
-            required
-          />
+            <input
+              name="registrationNumber"
+              type="text"
+              defaultValue={car.registrationNumber}
+              className="w-full border p-3 rounded-xl"
+              required
+            />
 
-          <input
-            name="imageUrl"
-            type="text"
-            defaultValue={car.imageUrl}
-            className="w-full border p-3 rounded-xl"
-            required
-          />
+            <input
+              name="imageUrl"
+              type="text"
+              defaultValue={car.imageUrl}
+              className="w-full border p-3 rounded-xl"
+              required
+            />
 
-          <textarea
-            name="description"
-            rows="5"
-            defaultValue={car.description}
-            className="w-full border p-3 rounded-xl"
-            required
-          />
+            <textarea
+              name="description"
+              rows="5"
+              defaultValue={car.description}
+              className="w-full border p-3 rounded-xl"
+              required
+            />
 
-          <select
-            name="availability"
-            defaultValue={String(car.availability)}
-            className="w-full border p-3 rounded-xl"
-          >
-            <option value="true">Available</option>
+            <select
+              name="availability"
+              defaultValue={String(car.availability)}
+              className="w-full border p-3 rounded-xl"
+            >
+              <option value="true">Available</option>
 
-            <option value="false">Unavailable</option>
-          </select>
+              <option value="false">Unavailable</option>
+            </select>
 
-          <button
-            disabled={updateLoading}
-            className="w-full bg-blue-600 text-white py-3 rounded-xl"
-          >
-            {updateLoading ? "Updating..." : "Update Car"}
-          </button>
-        </form>
-      </div>
-    </section>
+            <button
+              disabled={updateLoading}
+              className="w-full bg-blue-600 text-white py-3 rounded-xl"
+            >
+              {updateLoading ? "Updating..." : "Update Car"}
+            </button>
+          </form>
+        </div>
+      </section>
+    </PrivateRoute>
   );
 }

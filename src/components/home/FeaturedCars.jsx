@@ -9,7 +9,7 @@ import Image from "next/image";
 export default function FeaturedCars() {
   const [cars, setCars] = useState([]);
 
-  const [loading, setLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
     const fetchFeaturedCars = async () => {
@@ -28,14 +28,14 @@ export default function FeaturedCars() {
       } catch (error) {
         console.error(error);
       } finally {
-        setLoading(false);
+        setPageLoading(false);
       }
     };
 
     fetchFeaturedCars();
   }, []);
 
-  if (loading) {
+  if (pageLoading) {
     return (
       <section className="container-width py-20">
         <h1 className="text-3xl font-bold">Loading featured cars...</h1>
