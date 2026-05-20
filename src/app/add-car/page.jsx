@@ -8,6 +8,8 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/useAuth";
 
+import PrivateRoute from "@/components/PrivateRoute";
+
 export default function AddCarPage() {
   const { user, isPending } = useAuth();
 
@@ -97,9 +99,10 @@ export default function AddCarPage() {
   }
 
   return (
-    <section className="container-width py-20">
-      <div className="max-w-2xl mx-auto border rounded-2xl p-8">
-        <h1 className="text-4xl font-bold mb-8">Add Car</h1>
+    <PrivateRoute>
+      <section className="container-width py-20">
+        <div className="max-w-2xl mx-auto border rounded-2xl p-8">
+          <h1 className="text-4xl font-bold mb-8">Add Car</h1>
 
         <form onSubmit={handleAddCar} className="space-y-4">
           <input
@@ -167,5 +170,5 @@ export default function AddCarPage() {
         </form>
       </div>
     </section>
-  );
+  </PrivateRoute>
 }

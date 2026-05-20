@@ -10,6 +10,8 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/useAuth";
 
+import PrivateRoute from "@/components/PrivateRoute";
+
 export default function MyBookingsPage() {
   const { user, isPending } = useAuth();
 
@@ -112,6 +114,8 @@ export default function MyBookingsPage() {
   }
 
   return (
+    <PrivateRoute>
+
     <section className="container-width py-20">
       <h1 className="text-5xl font-bold mb-10">My Bookings</h1>
 
@@ -192,5 +196,5 @@ export default function MyBookingsPage() {
         </div>
       )}
     </section>
-  );
+  </PrivateRoute>
 }

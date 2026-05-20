@@ -2,7 +2,8 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import Providers from "@/providers/Providers";
-    
+import { AuthProvider } from "@/context/AuthProvider";
+
 import { HeroUIProvider } from "@heroui/react";
 
 import Navbar from "@/components/shared/Navbar";
@@ -22,14 +23,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={poppins.className}>
-        <Providers>
-          <Navbar />
+        <AuthProvider>
+          <Providers>
+            <Navbar />
 
-          <main className="min-h-screen">{children}</main>
+            <main className="min-h-screen">{children}</main>
 
-          <Footer />
-        </Providers>
-
+            <Footer />
+          </Providers>
+        </AuthProvider>
         <Toaster position="top-right" richColors />
       </body>
     </html>
