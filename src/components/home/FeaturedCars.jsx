@@ -14,7 +14,12 @@ export default function FeaturedCars() {
   useEffect(() => {
     const fetchFeaturedCars = async () => {
       try {
-        const response = await fetch("http://localhost:5001/api/cars");
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/cars`,
+          {
+            credentials: "include",
+          },
+        );
 
         const data = await response.json();
 

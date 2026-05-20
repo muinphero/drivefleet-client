@@ -20,7 +20,7 @@ export default function PrivateRoute({ children }) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <span className="loading loading-spinner loading-lg"></span>
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-black"></div>
       </div>
     );
   }

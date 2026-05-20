@@ -8,14 +8,14 @@ import { useRouter } from "next/navigation";
 
 import { toast } from "sonner";
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthProvider";
 
 import PrivateRoute from "@/components/PrivateRoute";
 
 export default function MyBookingsPage() {
   const { user, isPending } = useAuth();
 
-  const router = useRouter();
+  // const router = useRouter();
 
   const [bookings, setBookings] = useState([]);
 
@@ -27,17 +27,20 @@ export default function MyBookingsPage() {
 
   // FETCH BOOKINGS
   useEffect(() => {
-    if (!isPending && !user) {
-      router.push("/login");
+    // if (!isPending && !user) {
+    //   router.push("/login");
 
-      return;
-    }
+    //   return;
+    // }
 
     const fetchBookings = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5001/api/bookings/user/${user.email}`,
-        );
+  `${process.env.NEXT_PUBLIC_API_URL}/api/bookings/user/${user.email}`,
+  {
+    credentials: "include",
+  },
+);
 
         const data = await response.json();
 
@@ -67,19 +70,17 @@ export default function MyBookingsPage() {
   const handleCancelBooking = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5001/api/bookings/${selectedBookingId}`,
-        {
-          method: "DELETE",
+  `${process.env.NEXT_PUBLIC_API_URL}/api/bookings/${selectedBookingId}`,
+  {
+    method: "DELETE",
 
-          headers: {
-            "Content-Type": "application/json",
-          },
+    credentials: "include",
 
-          body: JSON.stringify({
-            email: user.email,
-          }),
-        },
-      );
+    headers: {
+      "Content-Type": "application/json",
+    },
+  },
+);
 
       const data = await response.json();
 
