@@ -6,6 +6,8 @@ import Link from "next/link";
 
 import Image from "next/image";
 
+import { toast } from "sonner";
+
 export default function ExploreCarsPage() {
   const [cars, setCars] = useState([]);
 
@@ -16,12 +18,20 @@ export default function ExploreCarsPage() {
   const [availability, setAvailability] = useState("");
 
   const [sort, setSort] = useState("");
+
   const [vehicleType, setVehicleType] = useState("");
 
   useEffect(() => {
     const fetchCars = async () => {
-      setPageLoading(true);
       try {
+        setPageLoading(true);
+
+        const api = process.env.NEXT_PUBLIC_API_URL;
+
+        if (!api) {
+          throw new Error("NEXT_PUBLIC_API_URL missing");
+        }
+
         const queryParams = new URLSearchParams();
 
         if (search) {
@@ -41,14 +51,27 @@ export default function ExploreCarsPage() {
         }
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/cars?${queryParams.toString()}`,
+          `${api}/api/cars?${queryParams.toString()}`,
+          {
+            credentials: "include",
+
+            cache: "no-store",
+          },
         );
+
+        if (!response.ok) {
+          throw new Error("Failed to load cars");
+        }
 
         const data = await response.json();
 
         setCars(Array.isArray(data) ? data : data.cars || []);
       } catch (error) {
         console.error(error);
+
+        setCars([]);
+
+        toast.error("Unable to load cars");
       } finally {
         setPageLoading(false);
       }
@@ -60,37 +83,42 @@ export default function ExploreCarsPage() {
   if (pageLoading) {
     return (
       <section className="container-width py-20">
-        <h1 className="text-3xl font-bold">Loading cars...</h1>
+        <div className="flex justify-center">
+          <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+        </div>
       </section>
     );
   }
 
   if (cars.length === 0) {
     return (
-      <section className="container-width py-20">
+      <section className="container-width py-20 text-center">
         <h1 className="text-3xl font-bold">No cars found</h1>
+
+        <p className="text-gray-500 mt-2">Try changing filters</p>
       </section>
     );
   }
 
   return (
-    <section className="container-width py-20">
-      <h1 className="text-5xl font-bold mb-10">Explore Cars</h1>
+    <section className="container-width py-14">
+      <h1 className="text-4xl font-bold mb-10">Explore Cars</h1>
 
       {/* FILTERS */}
-      <div className="grid md:grid-cols-3 gap-4 mb-10">
+
+      <div className="grid md:grid-cols-4 gap-4 mb-10">
         <input
           type="text"
           placeholder="Search by brand or model"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border p-3 rounded-xl"
+          className="border rounded-xl p-4"
         />
 
         <select
           value={availability}
           onChange={(e) => setAvailability(e.target.value)}
-          className="border p-3 rounded-xl"
+          className="border rounded-xl p-4"
         >
           <option value="">All Cars</option>
 
@@ -100,7 +128,7 @@ export default function ExploreCarsPage() {
         <select
           value={vehicleType}
           onChange={(e) => setVehicleType(e.target.value)}
-          className="border p-3 rounded-xl"
+          className="border rounded-xl p-4"
         >
           <option value="">All Types</option>
 
@@ -116,25 +144,32 @@ export default function ExploreCarsPage() {
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
-          className="border p-3 rounded-xl"
+          className="border rounded-xl p-4"
         >
           <option value="">Sort By Price</option>
 
-          <option value="asc">Low to High</option>
+          <option value="asc">Low → High</option>
 
-          <option value="desc">High to Low</option>
+          <option value="desc">High → Low</option>
         </select>
       </div>
 
-      {/* CAR GRID */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* GRID */}
+
+      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8">
         {cars.map((car) => (
           <div
             key={car._id}
-            className="border rounded-2xl overflow-hidden bg-white"
+            className="
+              overflow-hidden
+              rounded-3xl
+              border
+              bg-white
+              hover:shadow-lg
+              transition
+            "
           >
-            {/* IMAGE */}
-            <div className="relative w-full h-60">
+            <div className="relative h-60">
               <Image
                 src={
                   car.imageUrl ||
@@ -147,36 +182,40 @@ export default function ExploreCarsPage() {
               />
             </div>
 
-            {/* CONTENT */}
-            <div className="p-5 space-y-3">
+            <div className="p-5 space-y-2">
               <h2 className="text-2xl font-bold">
                 {car.brand} {car.model}
               </h2>
 
               <p>Type: {car.vehicleType}</p>
 
-              <p>Daily Price: ${car.dailyRentalPrice}</p>
+              <p>Daily: ${car.dailyRentalPrice}</p>
 
               <p>Bookings: {car.bookingCount || 0}</p>
 
-              <p>Added by: {car.ownerName}</p>
+              <p>Owner: {car.ownerName}</p>
 
-              <p>
-                Status:{" "}
+              <div>
                 <span
                   className={
-                    car.availability
-                      ? "text-green-600 font-semibold"
-                      : "text-red-600 font-semibold"
+                    car.availability ? "text-green-600" : "text-red-600"
                   }
                 >
                   {car.availability ? "Available" : "Unavailable"}
                 </span>
-              </p>
+              </div>
 
               <Link
                 href={`/car/${car._id}`}
-                className="block text-center bg-blue-600 text-white py-3 rounded-xl"
+                className="
+                  mt-4
+                  block
+                  rounded-xl
+                  bg-blue-600
+                  py-3
+                  text-center
+                  text-white
+                "
               >
                 View Details
               </Link>

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+
+import { useRouter } from "next/navigation";
 
 import { toast } from "sonner";
 
@@ -11,10 +13,9 @@ import PrivateRoute from "@/components/PrivateRoute";
 export default function UpdateCarPage() {
   const params = useParams();
 
-  const id = params.id;
   const router = useRouter();
 
-  `${process.env.NEXT_PUBLIC_API_URL}/api/cars`;
+  const id = params.id;
 
   const [car, setCar] = useState(null);
 
@@ -23,21 +24,24 @@ export default function UpdateCarPage() {
   const [updateLoading, setUpdateLoading] = useState(false);
 
   useEffect(() => {
-    const fetchCar = async () => {
+    async function fetchCar() {
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/cars/${id}`,
+          {
+            credentials: "include",
+          },
         );
 
         const data = await response.json();
 
         setCar(data);
-      } catch (error) {
-        console.error(error);
+      } catch {
+        toast.error("Unable to load car");
       } finally {
         setPageLoading(false);
       }
-    };
+    }
 
     if (id) {
       fetchCar();
@@ -49,26 +53,20 @@ export default function UpdateCarPage() {
 
     setUpdateLoading(true);
 
-    const form = e.currentTarget;
-
-    const formData = new FormData(form);
+    const form = new FormData(e.currentTarget);
 
     const updatedCar = {
-      model: formData.get("model"),
+      dailyRentalPrice: Number(form.get("dailyRentalPrice")),
 
-      brand: formData.get("brand"),
+      vehicleType: form.get("vehicleType"),
 
-      dailyRentalPrice: Number(formData.get("dailyRentalPrice")),
+      imageUrl: form.get("imageUrl"),
 
-      vehicleType: formData.get("vehicleType"),
+      pickupLocation: form.get("pickupLocation"),
 
-      registrationNumber: formData.get("registrationNumber"),
+      description: form.get("description"),
 
-      imageUrl: formData.get("imageUrl"),
-
-      description: formData.get("description"),
-
-      availability: formData.get("availability") === "true",
+      availability: form.get("availability") === "available",
     };
 
     try {
@@ -95,13 +93,11 @@ export default function UpdateCarPage() {
         throw new Error(data.message);
       }
 
-      toast.success("Car updated successfully");
+      toast.success("Car updated");
 
       router.push("/my-cars");
     } catch (error) {
-      console.error(error);
-
-      toast.error("Update failed");
+      toast.error(error.message || "Update failed");
     } finally {
       setUpdateLoading(false);
     }
@@ -109,96 +105,102 @@ export default function UpdateCarPage() {
 
   if (pageLoading) {
     return (
-      <section className="container-width py-20">
-        <h1 className="text-3xl font-bold">Loading...</h1>
+      <section className="container-width py-20 text-center">
+        Loading...
       </section>
     );
   }
 
   if (!car) {
     return (
-      <section className="container-width py-20">
-        <h1 className="text-3xl font-bold">Car not found</h1>
+      <section className="container-width py-20 text-center">
+        Car not found
       </section>
     );
   }
 
   return (
     <PrivateRoute>
-      <section className="container-width py-20">
-        <div className="max-w-2xl mx-auto border rounded-2xl p-8">
-          <h1 className="text-4xl font-bold mb-8">Update Car</h1>
+      <section className="container-width py-14">
+        <div className="max-w-3xl mx-auto rounded-3xl border bg-white p-8">
+          <h1 className="text-4xl font-bold">Update Car</h1>
 
-          <form onSubmit={handleUpdate} className="space-y-4">
-            <input
-              name="model"
-              type="text"
-              defaultValue={car.model}
-              className="w-full border p-3 rounded-xl"
-              required
-            />
+          <p className="text-gray-500 mt-2 mb-8">Edit your listing</p>
 
+          <form onSubmit={handleUpdate} className="grid md:grid-cols-2 gap-5">
             <input
-              name="brand"
-              type="text"
-              defaultValue={car.brand}
-              className="w-full border p-3 rounded-xl"
-              required
-            />
-
-            <input
-              name="dailyRentalPrice"
               type="number"
+              name="dailyRentalPrice"
               defaultValue={car.dailyRentalPrice}
-              className="w-full border p-3 rounded-xl"
+              placeholder="Price"
               required
+              className="border rounded-xl p-4"
             />
 
-            <input
+            <select
               name="vehicleType"
-              type="text"
               defaultValue={car.vehicleType}
-              className="w-full border p-3 rounded-xl"
-              required
-            />
+              className="border rounded-xl p-4"
+            >
+              <option>SUV</option>
 
-            <input
-              name="registrationNumber"
-              type="text"
-              defaultValue={car.registrationNumber}
-              className="w-full border p-3 rounded-xl"
-              required
-            />
+              <option>Sedan</option>
+
+              <option>Hatchback</option>
+
+              <option>Luxury</option>
+            </select>
 
             <input
               name="imageUrl"
-              type="text"
               defaultValue={car.imageUrl}
-              className="w-full border p-3 rounded-xl"
+              placeholder="Image URL"
               required
+              className="border rounded-xl p-4"
             />
 
-            <textarea
-              name="description"
-              rows="5"
-              defaultValue={car.description}
-              className="w-full border p-3 rounded-xl"
+            <input
+              name="pickupLocation"
+              defaultValue={car.pickupLocation}
+              placeholder="Pickup Location"
               required
+              className="border rounded-xl p-4"
             />
 
             <select
               name="availability"
-              defaultValue={String(car.availability)}
-              className="w-full border p-3 rounded-xl"
+              defaultValue={car.availability ? "available" : "unavailable"}
+              className="border rounded-xl p-4"
             >
-              <option value="true">Available</option>
+              <option value="available">Available</option>
 
-              <option value="false">Unavailable</option>
+              <option value="unavailable">Unavailable</option>
             </select>
+
+            <div />
+
+            <textarea
+              name="description"
+              rows="6"
+              defaultValue={car.description}
+              className="
+                md:col-span-2
+                border
+                rounded-xl
+                p-4
+              "
+            />
 
             <button
               disabled={updateLoading}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl"
+              className="
+                md:col-span-2
+                rounded-2xl
+                bg-blue-600
+                text-white
+                py-4
+                disabled:opacity-60
+              "
             >
               {updateLoading ? "Updating..." : "Update Car"}
             </button>

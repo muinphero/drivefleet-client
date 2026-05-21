@@ -38,6 +38,7 @@ export default function RootLayout({ children }) {
           expand={false}
           closeButton
           offset={90}
+          duration={1800}
           toastOptions={{
             className: "!z-[40] !rounded-2xl",
           }}

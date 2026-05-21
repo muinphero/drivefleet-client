@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -11,13 +11,11 @@ import { useAuth } from "@/providers/AuthProvider";
 import PrivateRoute from "@/components/PrivateRoute";
 
 export default function AddCarPage() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
-  // `${process.env.NEXT_PUBLIC_API_URL}/api/cars`
+  const router = useRouter();
 
   const [formLoading, setFormLoading] = useState(false);
-
- 
 
   const handleAddCar = async (e) => {
     e.preventDefault();
@@ -26,31 +24,32 @@ export default function AddCarPage() {
 
     const form = e.currentTarget;
 
-    const formData = new FormData(form);
+    const data = new FormData(form);
 
     const carData = {
-      model: formData.get("model"),
-      brand: formData.get("brand"),
+      carName: data.get("carName"),
 
-      dailyRentalPrice: Number(formData.get("dailyRentalPrice")),
+      dailyRentalPrice: Number(data.get("dailyRentalPrice")),
 
-      vehicleType: formData.get("vehicleType"),
+      vehicleType: data.get("vehicleType"),
 
-      registrationNumber: formData.get("registrationNumber"),
+      imageUrl: data.get("imageUrl"),
 
-      imageUrl: formData.get("imageUrl"),
+      seatCapacity: Number(data.get("seatCapacity")),
 
-      description: formData.get("description"),
+      pickupLocation: data.get("pickupLocation"),
+
+      description: data.get("description"),
+
+      availability: data.get("availability") === "available",
 
       bookingCount: 0,
-
-      availability: true,
-
-      createdAt: new Date(),
 
       ownerEmail: user?.email,
 
       ownerName: user?.name,
+
+      createdAt: new Date(),
     };
 
     try {
@@ -59,112 +58,136 @@ export default function AddCarPage() {
         {
           method: "POST",
 
+          credentials: "include",
+
           headers: {
             "Content-Type": "application/json",
           },
-
-          credentials: "include",
 
           body: JSON.stringify(carData),
         },
       );
 
-      const data = await response.json();
+      const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message);
+        throw new Error(result.message);
       }
 
       toast.success("Car added successfully");
 
       form.reset();
 
-      console.log(data);
+      router.push("/my-cars");
     } catch (error) {
-      console.error(error);
-
-      toast.error("Failed to add car");
+      toast.error(error.message || "Failed to add car");
     } finally {
       setFormLoading(false);
     }
   };
 
-  if (formLoading) {
-    return <h1>Loading...</h1>;
-  }
-
-  if (!user) {
-    return null;
-  }
-
   return (
     <PrivateRoute>
-      <section className="container-width py-20">
-        <div className="max-w-2xl mx-auto border rounded-2xl p-8">
-          <h1 className="text-4xl font-bold mb-8">Add Car</h1>
+      <section className="container-width py-14">
+        <div className="max-w-3xl mx-auto rounded-3xl border bg-white p-8">
+          <h1 className="text-4xl font-bold mb-2">Add Your Car</h1>
 
-          <form onSubmit={handleAddCar} className="space-y-4">
-            <input
-              name="model"
-              type="text"
-              placeholder="Car Model"
-              className="w-full border p-3 rounded-xl"
-              required
-            />
+          <p className="text-gray-500 mb-8">Publish your vehicle for booking</p>
 
+          <form onSubmit={handleAddCar} className="grid md:grid-cols-2 gap-5">
             <input
-              name="brand"
-              type="text"
-              placeholder="Brand"
-              className="w-full border p-3 rounded-xl"
+              name="carName"
+              placeholder="Car Name"
               required
+              className="border rounded-xl p-4"
             />
 
             <input
               name="dailyRentalPrice"
               type="number"
-              placeholder="Daily Rental Price"
-              className="w-full border p-3 rounded-xl"
+              placeholder="Daily Rent Price"
               required
+              className="border rounded-xl p-4"
             />
 
-            <input
+            <select
               name="vehicleType"
-              type="text"
-              placeholder="Vehicle Type"
-              className="w-full border p-3 rounded-xl"
               required
-            />
+              className="border rounded-xl p-4"
+            >
+              <option value="">Select Type</option>
 
-            <input
-              name="registrationNumber"
-              type="text"
-              placeholder="Registration Number"
-              className="w-full border p-3 rounded-xl"
-              required
-            />
+              <option>SUV</option>
+
+              <option>Sedan</option>
+
+              <option>Hatchback</option>
+
+              <option>Luxury</option>
+            </select>
 
             <input
               name="imageUrl"
-              type="text"
+              type="url"
               placeholder="Image URL"
-              className="w-full border p-3 rounded-xl"
               required
+              className="border rounded-xl p-4"
             />
+
+            <input
+              name="seatCapacity"
+              type="number"
+              placeholder="Seat Capacity"
+              required
+              className="border rounded-xl p-4"
+            />
+
+            <input
+              name="pickupLocation"
+              placeholder="Pickup Location"
+              required
+              className="border rounded-xl p-4"
+            />
+
+            <select
+              name="availability"
+              required
+              className="border rounded-xl p-4"
+            >
+              <option value="">Availability</option>
+
+              <option value="available">Available</option>
+
+              <option value="unavailable">Unavailable</option>
+            </select>
+
+            <div />
 
             <textarea
               name="description"
-              placeholder="Description"
               rows="5"
-              className="w-full border p-3 rounded-xl"
+              placeholder="Description"
               required
+              className="
+                md:col-span-2
+                border
+                rounded-xl
+                p-4
+              "
             />
 
             <button
               disabled={formLoading}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl"
+              className="
+                md:col-span-2
+                rounded-2xl
+                bg-blue-600
+                text-white
+                py-4
+                disabled:opacity-60
+              "
             >
-              {formLoading ? "Adding..." : "Add Car"}
+              {formLoading ? "Publishing..." : "Add Car"}
             </button>
           </form>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+
 import { useState, useEffect, useRef } from "react";
 
 import { Menu, X, ChevronDown } from "lucide-react";
@@ -38,15 +39,19 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleOutside);
   }, []);
 
+  const closeAll = () => {
+    setProfileOpen(false);
+
+    setMobileMenuOpen(false);
+  };
+
   const handleLogout = async () => {
     try {
       await authClient.signOut();
 
+      closeAll();
+
       toast.success("Logged out");
-
-      setProfileOpen(false);
-
-      setMobileMenuOpen(false);
 
       window.location.href = "/";
     } catch {
@@ -62,12 +67,13 @@ export default function Navbar() {
 
     {
       name: "Explore Cars",
+
       href: "/explore-cars",
     },
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b">
+    <nav className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur">
       <div className="container-width h-[72px] flex items-center">
         {/* LOGO */}
 
@@ -88,7 +94,7 @@ export default function Navbar() {
         <div className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] flex-1 items-center">
           <div />
 
-          <div className="flex justify-center gap-10">
+          <div className="flex gap-10 justify-center">
             {publicLinks.map((link) => (
               <Link
                 key={link.href}
@@ -102,7 +108,7 @@ export default function Navbar() {
 
           <div ref={profileRef} className="flex justify-end min-w-[260px]">
             {loading ? (
-              <div className="h-[46px] w-[180px]" />
+              <div className="h-[44px] w-[180px]" />
             ) : user ? (
               <>
                 <button
@@ -129,6 +135,7 @@ export default function Navbar() {
                     <div className="p-2">
                       <Link
                         href="/add-car"
+                        onClick={closeAll}
                         className="block px-4 py-3 rounded-xl hover:bg-gray-50"
                       >
                         Add Car
@@ -136,6 +143,7 @@ export default function Navbar() {
 
                       <Link
                         href="/my-cars"
+                        onClick={closeAll}
                         className="block px-4 py-3 rounded-xl hover:bg-gray-50"
                       >
                         My Cars
@@ -143,6 +151,7 @@ export default function Navbar() {
 
                       <Link
                         href="/my-bookings"
+                        onClick={closeAll}
                         className="block px-4 py-3 rounded-xl hover:bg-gray-50"
                       >
                         My Bookings
@@ -198,6 +207,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={closeAll}
                 className="block px-3 py-2 rounded-xl"
               >
                 {link.name}
@@ -207,15 +217,27 @@ export default function Navbar() {
             {!loading &&
               (user ? (
                 <>
-                  <Link href="/add-car" className="block px-3 py-2">
+                  <Link
+                    href="/add-car"
+                    onClick={closeAll}
+                    className="block px-3 py-2"
+                  >
                     Add Car
                   </Link>
 
-                  <Link href="/my-cars" className="block px-3 py-2">
+                  <Link
+                    href="/my-cars"
+                    onClick={closeAll}
+                    className="block px-3 py-2"
+                  >
                     My Cars
                   </Link>
 
-                  <Link href="/my-bookings" className="block px-3 py-2">
+                  <Link
+                    href="/my-bookings"
+                    onClick={closeAll}
+                    className="block px-3 py-2"
+                  >
                     My Bookings
                   </Link>
 

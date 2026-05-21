@@ -1,43 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 
 import Image from "next/image";
 
-import PrivateRoute from "@/components/PrivateRoute";
-
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  useDisclosure,
-} from "@heroui/react";
+import { useRouter } from "next/navigation";
 
 import { toast } from "sonner";
 
-import { useAuth } from "@/hooks/useAuth";
-
-import usePageTitle from "@/hooks/usePageTitle";
-
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
+import { useAuth } from "@/providers/AuthProvider";
+
 export default function CarDetailsPage({ params }) {
-  const resolvedParams = use(params);
+  const { id } = use(params);
 
-  const id = resolvedParams.id;
-
-  `${process.env.NEXT_PUBLIC_API_URL}/api/cars`;
+  const router = useRouter();
 
   const { user } = useAuth();
 
   const [car, setCar] = useState(null);
 
-  const [pageLoading, setPageLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  const [showBooking, setShowBooking] = useState(false);
 
   const [bookingLoading, setBookingLoading] = useState(false);
 
@@ -45,12 +31,8 @@ export default function CarDetailsPage({ params }) {
 
   const [specialNote, setSpecialNote] = useState("");
 
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
-  usePageTitle("Car Details");
-
   useEffect(() => {
-    const fetchCar = async () => {
+    async function loadCar() {
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/cars/${id}`,
@@ -59,64 +41,66 @@ export default function CarDetailsPage({ params }) {
         const data = await response.json();
 
         setCar(data);
-      } catch (error) {
-        console.error(error);
-
-        toast.error("Failed to fetch car");
+      } catch {
+        toast.error("Failed to load car");
       } finally {
-        setPageLoading(false);
+        setLoading(false);
       }
-    };
+    }
 
-    fetchCar();
+    loadCar();
   }, [id]);
 
-  const handleBooking = async () => {
-    // if (!user) {
-    //   router.push("/login");
+  async function handleBooking() {
+    if (!user) {
+      setShowBooking(false);
 
-    //   return;
-    // }
+      toast.error("Please login first");
+
+      router.push(`/login?redirect=/car/${id}`);
+
+      return;
+    }
 
     try {
       setBookingLoading(true);
-
-      const bookingData = {
-        carId: car._id,
-
-        carImage: car.imageUrl,
-
-        carBrand: car.brand,
-
-        carModel: car.model,
-
-        dailyRentalPrice: car.dailyRentalPrice,
-
-        userName: user.name,
-
-        userEmail: user.email,
-
-        ownerEmail: car.ownerEmail,
-
-        bookingDate: new Date(),
-
-        driverNeeded,
-
-        specialNote,
-      };
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/bookings`,
         {
           method: "POST",
 
+          credentials: "include",
+
           headers: {
             "Content-Type": "application/json",
           },
 
-          credentials: "include",
+          body: JSON.stringify({
+            carId: car._id,
 
-          body: JSON.stringify(bookingData),
+            carName: `${car.brand} ${car.model}`,
+
+            carBrand: car.brand,
+
+            carModel: car.model,
+
+            carImage: car.imageUrl,
+
+            totalPrice: car.dailyRentalPrice,
+
+            pickup: car.location,
+
+            bookingDate: new Date(),
+
+            driverNeeded,
+
+            specialNote,
+
+            userEmail: user.email,
+
+            userName: user.name,
+          }),
         },
       );
 
@@ -126,195 +110,185 @@ export default function CarDetailsPage({ params }) {
         throw new Error(data.message);
       }
 
-      toast.success("Car booked successfully");
+      toast.success("Booking successful");
 
-      onOpenChange(false);
+      setShowBooking(false);
+
+      router.push("/my-bookings");
     } catch (error) {
-      console.error(error);
-
       toast.error(error.message || "Booking failed");
     } finally {
       setBookingLoading(false);
     }
-  };
+  }
 
-  if (pageLoading) {
+  if (loading) {
     return <LoadingSpinner />;
   }
 
   if (!car) {
-    return (
-      <section className="max-w-7xl mx-auto px-4 lg:px-8 py-20">
-        <h1 className="text-4xl font-bold">Car not found</h1>
-      </section>
-    );
+    return <section className="container-width py-20">Car not found</section>;
   }
 
   return (
-    <PrivateRoute>
-      <section className="max-w-7xl mx-auto px-4 lg:px-8 py-20">
-        <div className="grid lg:grid-cols-2 gap-14 items-start">
-          {/* IMAGE */}
-          <div className="relative h-[500px] rounded-3xl overflow-hidden">
-            <Image
-              src={car.imageUrl}
-              alt={`${car.brand} ${car.model}`}
-              fill
-              className="object-cover"
-            />
-          </div>
-
-          {/* DETAILS */}
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-5xl font-bold mb-3">
-                {car.brand} {car.model}
-              </h1>
-
-              <p className="text-gray-500 text-lg">{car.description}</p>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full font-medium">
-                {car.vehicleType}
-              </span>
-
-              {car.availability ? (
-                <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full font-medium">
-                  Available
-                </span>
-              ) : (
-                <span className="bg-red-100 text-red-700 px-4 py-2 rounded-full font-medium">
-                  Unavailable
-                </span>
-              )}
-            </div>
-
-            <div className="space-y-3 text-lg">
-              <p>
-                <span className="font-semibold">Daily Price:</span> $
-                {car.dailyRentalPrice}
-              </p>
-
-              <p>
-                <span className="font-semibold">Booking Count:</span>{" "}
-                {car.bookingCount}
-              </p>
-
-              <p>
-                <span className="font-semibold">Location:</span> {car.location}
-              </p>
-
-              <p>
-                <span className="font-semibold">Registered Number:</span>{" "}
-                {car.registrationNumber}
-              </p>
-            </div>
-
-            <button
-              onClick={onOpen}
-              className="bg-blue-600 hover:bg-blue-700 transition text-white px-8 py-4 rounded-2xl font-semibold text-lg"
-            >
-              Book Now
-            </button>
-          </div>
+    <section className="container-width py-16">
+      <div className="grid lg:grid-cols-2 gap-16">
+        <div className="relative h-[520px] rounded-3xl overflow-hidden">
+          <Image
+            src={car.imageUrl}
+            alt={car.model}
+            fill
+            unoptimized
+            className="object-cover"
+          />
         </div>
 
-        {/* BOOKING MODAL */}
-        <Modal
-          isOpen={isOpen}
-          onOpenChange={onOpenChange}
-          placement="center"
-          size="2xl"
-          backdrop="blur"
-          classNames={{
-            base: "bg-white border border-gray-200 rounded-3xl",
-            header: "border-b border-gray-200 pb-4",
-            body: "py-6",
-            footer: "border-t border-gray-200 pt-4",
-            closeButton: "hover:bg-gray-100 active:bg-gray-200",
-          }}
+        <div className="space-y-6">
+          <h1 className="text-5xl font-bold">
+            {car.brand} {car.model}
+          </h1>
+
+          <p className="text-gray-600">{car.description}</p>
+
+          <div className="space-y-3">
+            <p>
+              Daily Price:
+              <strong> ${car.dailyRentalPrice}</strong>
+            </p>
+
+            <p>Type: {car.vehicleType}</p>
+
+            <p>Location: {car.location}</p>
+          </div>
+
+          <button
+            onClick={() => setShowBooking(true)}
+            className="
+              px-8
+              py-4
+              rounded-2xl
+              bg-blue-600
+              hover:bg-blue-700
+              text-white
+              font-semibold
+              transition
+            "
+          >
+            Book Now
+          </button>
+        </div>
+      </div>
+
+      {showBooking && (
+        <div
+          className="
+            fixed
+            inset-0
+            z-[9999]
+            bg-black/60
+            flex
+            items-center
+            justify-center
+            p-5
+          "
         >
-          <ModalContent>
-            {(onClose) => (
-              <>
-                <ModalHeader className="text-2xl font-bold">
-                  Book Car
-                </ModalHeader>
+          <div
+            className="
+              bg-white
+              w-full
+              max-w-[650px]
+              rounded-3xl
+              overflow-hidden
+              shadow-2xl
+            "
+          >
+            <div className="flex justify-between border-b p-6">
+              <h2 className="text-3xl font-bold">Book Car</h2>
 
-                <ModalBody>
-                  <div className="space-y-6">
-                    {/* CAR INFO */}
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-6 space-y-3">
-                      <h2 className="text-2xl font-bold">
-                        {car.brand} {car.model}
-                      </h2>
+              <button onClick={() => setShowBooking(false)}>✕</button>
+            </div>
 
-                      <p className="text-gray-600">
-                        Daily Rental Price:
-                        <span className="font-semibold ml-2">
-                          ${car.dailyRentalPrice}
-                        </span>
-                      </p>
-                    </div>
+            <div className="p-6 space-y-6">
+              <div className="bg-blue-50 rounded-3xl p-6">
+                <h3 className="text-3xl font-bold">
+                  {car.brand} {car.model}
+                </h3>
 
-                    {/* DRIVER */}
-                    <div>
-                      <label className="block font-semibold mb-2">
-                        Driver Needed?
-                      </label>
+                <p className="mt-2">
+                  Daily Rental Price
+                  <strong> ${car.dailyRentalPrice}</strong>
+                </p>
+              </div>
 
-                      <select
-                        value={driverNeeded}
-                        onChange={(e) => setDriverNeeded(e.target.value)}
-                        className="w-full border rounded-xl p-3 outline-none"
-                      >
-                        <option value="No">No</option>
+              <div>
+                <label>Driver Needed?</label>
 
-                        <option value="Yes">Yes</option>
-                      </select>
-                    </div>
+                <select
+                  value={driverNeeded}
+                  onChange={(e) => setDriverNeeded(e.target.value)}
+                  className="
+                    mt-2
+                    w-full
+                    rounded-2xl
+                    border
+                    p-4
+                  "
+                >
+                  <option>No</option>
 
-                    {/* NOTE */}
-                    <div>
-                      <label className="block font-semibold mb-2">
-                        Special Note
-                      </label>
+                  <option>Yes</option>
+                </select>
+              </div>
 
-                      <textarea
-                        rows={5}
-                        value={specialNote}
-                        onChange={(e) => setSpecialNote(e.target.value)}
-                        placeholder="Any additional request..."
-                        className="w-full border rounded-xl p-3 outline-none resize-none"
-                      />
-                    </div>
-                  </div>
-                </ModalBody>
+              <div>
+                <label>Special Note</label>
 
-                <ModalFooter>
-                  <Button variant="light" onPress={onClose}>
-                    Cancel
-                  </Button>
+                <textarea
+                  rows="4"
+                  value={specialNote}
+                  onChange={(e) => setSpecialNote(e.target.value)}
+                  placeholder="Any additional request..."
+                  className="
+                    mt-2
+                    w-full
+                    rounded-2xl
+                    border
+                    p-4
+                  "
+                />
+              </div>
+            </div>
 
-                  <Button
-                    color="primary"
-                    className="font-semibold px-6"
-                    onPress={async () => {
-                      await handleBooking();
+            <div className="border-t p-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowBooking(false)}
+                className="
+                  h-12
+                  px-6
+                  border
+                  rounded-2xl
+                "
+              >
+                Cancel
+              </button>
 
-                      onClose();
-                    }}
-                    isLoading={bookingLoading}
-                  >
-                    Confirm Booking
-                  </Button>
-                </ModalFooter>
-              </>
-            )}
-          </ModalContent>
-        </Modal>
-      </section>
-    </PrivateRoute>
+              <button
+                disabled={bookingLoading}
+                onClick={handleBooking}
+                className="
+                  h-12
+                  px-6
+                  rounded-2xl
+                  bg-blue-600
+                  text-white
+                "
+              >
+                {bookingLoading ? "Booking..." : "Confirm Booking"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

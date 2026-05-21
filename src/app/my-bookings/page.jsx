@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import Image from "next/image";
 
+import Link from "next/link";
+
 import { toast } from "sonner";
 
 import { useAuth } from "@/providers/AuthProvider";
@@ -13,19 +15,18 @@ import PrivateRoute from "@/components/PrivateRoute";
 export default function MyBookingsPage() {
   const { user, loading } = useAuth();
 
-  // `${process.env.NEXT_PUBLIC_API_URL}/api/cars`
-
   const [bookings, setBookings] = useState([]);
 
   const [pageLoading, setPageLoading] = useState(true);
 
-  const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
 
-  // FETCH BOOKINGS
+  const [cancelLoading, setCancelLoading] = useState(false);
+
   useEffect(() => {
-    const fetchBookings = async () => {
+    async function fetchBookings() {
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/bookings/user/${user.email}`,
@@ -37,71 +38,59 @@ export default function MyBookingsPage() {
         const data = await response.json();
 
         setBookings(Array.isArray(data) ? data : data.bookings || []);
-      } catch (error) {
-        console.error(error);
-
-        toast.error("Failed to fetch bookings");
+      } catch {
+        toast.error("Unable to load bookings");
       } finally {
         setPageLoading(false);
       }
-    };
+    }
 
     if (user?.email) {
       fetchBookings();
     }
-  }, [user, loading]);
+  }, [user]);
 
-  // OPEN MODAL
-  const openCancelModal = (bookingId) => {
-    setSelectedBookingId(bookingId);
+  function openCancelModal(booking) {
+    setSelectedBooking(booking);
 
     setShowModal(true);
-  };
+  }
 
-  // CANCEL BOOKING
-  const handleCancelBooking = async () => {
+  async function handleCancelBooking() {
     try {
+      setCancelLoading(true);
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/bookings/${selectedBookingId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/bookings/${selectedBooking._id}`,
         {
           method: "DELETE",
 
           credentials: "include",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
         },
       );
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.message);
+        throw new Error();
       }
 
-      // REMOVE FROM UI
       setBookings((prev) =>
-        prev.filter((booking) => booking._id !== selectedBookingId),
+        prev.filter((item) => item._id !== selectedBooking._id),
       );
 
       toast.success("Booking cancelled");
 
       setShowModal(false);
-
-      setSelectedBookingId(null);
-    } catch (error) {
-      console.error(error);
-
-      toast.error(error.message || "Failed to cancel booking");
+    } catch {
+      toast.error("Cancel failed");
+    } finally {
+      setCancelLoading(false);
     }
-  };
+  }
 
-  // LOADING
   if (loading || pageLoading) {
     return (
-      <section className="container-width py-20">
-        <h1 className="text-3xl font-bold">Loading...</h1>
+      <section className="container-width py-20 text-center">
+        Loading...
       </section>
     );
   }
@@ -112,14 +101,12 @@ export default function MyBookingsPage() {
         <div className="mb-10">
           <h1 className="text-4xl font-bold">My Bookings</h1>
 
-          <p className="text-gray-500 mt-2">Manage your booked cars</p>
+          <p className="text-gray-500">View and manage reservations</p>
         </div>
 
         {bookings.length === 0 ? (
-          <div className="rounded-3xl border bg-white p-12 text-center">
-            <h2 className="text-2xl font-semibold">No bookings yet</h2>
-
-            <p className="text-gray-500 mt-2">Explore cars and reserve one.</p>
+          <div className="rounded-3xl border p-14 text-center">
+            No bookings found
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -127,14 +114,12 @@ export default function MyBookingsPage() {
               <div
                 key={booking._id}
                 className="
-              rounded-3xl
-              overflow-hidden
-              border
-              bg-white
-              shadow-sm
-              hover:shadow-md
-              transition
-            "
+                    rounded-3xl
+                    overflow-hidden
+                    border
+                    bg-white
+                    shadow-sm
+                  "
               >
                 <div className="relative h-60">
                   <Image
@@ -142,7 +127,9 @@ export default function MyBookingsPage() {
                       booking.carImage ||
                       "https://images.unsplash.com/photo-1503376780353-7e6692767b70"
                     }
-                    alt={booking.carModel}
+                    alt={
+                      booking.carName || booking.carModel || "Booked car image"
+                    }
                     fill
                     unoptimized
                     className="object-cover"
@@ -151,30 +138,58 @@ export default function MyBookingsPage() {
 
                 <div className="p-6">
                   <h2 className="text-2xl font-bold">
-                    {booking.carBrand} {booking.carModel}
+                    {booking.carName || booking.carModel || "Booked Car"}
                   </h2>
 
                   <div className="mt-4 space-y-2 text-gray-600">
-                    <p>Booked By: {booking.userName}</p>
-
-                    <p>Owner: {booking.ownerEmail}</p>
+                    <p>
+                      Total Price:
+                      <span className="font-semibold">
+                        {" "}
+                        $
+                        {booking.totalPrice ||
+                          booking.dailyRentalPrice ||
+                          booking.price ||
+                          "N/A"}
+                      </span>
+                    </p>
 
                     <p>
-                      Date: {new Date(booking.bookingDate).toLocaleDateString()}
+                      Booking Date:{" "}
+                      <Link
+                        href="/my-bookings"
+                        className="text-blue-600 underline"
+                      >
+                        {new Date(
+                          booking.bookingDate || booking.createdAt,
+                        ).toLocaleDateString()}
+                      </Link>
+                    </p>
+
+                    <p>
+                      Pickup:
+                      <span className="font-medium">
+                        {" "}
+                        {booking.pickup ||
+                          booking.pickupLocation ||
+                          booking.location ||
+                          "N/A"}
+                      </span>
                     </p>
                   </div>
 
                   <button
-                    onClick={() => openCancelModal(booking._id)}
+                    onClick={() => openCancelModal(booking)}
                     className="
-                    mt-6
-                    w-full
-                    rounded-2xl
-                    bg-red-500
-                    py-3
-                    text-white
-                    hover:bg-red-600
-                  "
+                        mt-6
+                        w-full
+                        rounded-2xl
+                        bg-red-500
+                        hover:bg-red-600
+                        text-white
+                        py-3
+                        transition
+                      "
                   >
                     Cancel Booking
                   </button>
@@ -184,124 +199,59 @@ export default function MyBookingsPage() {
           </div>
         )}
 
-        {/* MODAL */}
-
         {showModal && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div
+            className="
+              fixed
+              inset-0
+              z-50
+              bg-black/50
+              flex
+              items-center
+              justify-center
+              p-4
+            "
+          >
             <div
               className="
-        bg-white
-        rounded-3xl
-        w-full
-        max-w-5xl
-        overflow-hidden
-      "
+                bg-white
+                rounded-3xl
+                p-8
+                w-full
+                max-w-md
+              "
             >
-              {/* HEADER */}
+              <h2 className="text-2xl font-bold">Cancel Booking?</h2>
 
-              <div className="flex items-center justify-between p-6 border-b">
-                <h2 className="text-3xl font-bold">Book Car</h2>
+              <p className="mt-3 text-gray-600">{selectedBooking?.carName}</p>
+
+              <div className="mt-8 flex gap-3">
+                <button
+                  disabled={cancelLoading}
+                  onClick={() => setShowModal(false)}
+                  className="
+                    flex-1
+                    border
+                    rounded-2xl
+                    py-3
+                  "
+                >
+                  Keep
+                </button>
 
                 <button
-                  onClick={() => setShowModal(false)}
-                  className="text-2xl"
+                  disabled={cancelLoading}
+                  onClick={handleCancelBooking}
+                  className="
+                    flex-1
+                    rounded-2xl
+                    bg-red-500
+                    text-white
+                    py-3
+                  "
                 >
-                  ×
+                  {cancelLoading ? "Cancelling..." : "Confirm"}
                 </button>
-              </div>
-
-              {/* BODY */}
-
-              <div className="grid lg:grid-cols-2 gap-10 p-8">
-                {/* LEFT */}
-
-                <div>
-                  <div className="relative h-[280px] rounded-3xl overflow-hidden">
-                    <Image
-                      src={car.imageUrl}
-                      alt={car.model}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-
-                  <div className="mt-5">
-                    <h3 className="text-4xl font-bold">
-                      {car.brand} {car.model}
-                    </h3>
-
-                    <p className="mt-3 text-xl">
-                      Daily Price:
-                      <span className="font-bold">${car.dailyRentalPrice}</span>
-                    </p>
-                  </div>
-                </div>
-
-                {/* RIGHT */}
-
-                <form onSubmit={handleBooking} className="space-y-6">
-                  <div>
-                    <label className="font-semibold">Driver Needed?</label>
-
-                    <select
-                      className="
-                mt-2
-                w-full
-                rounded-2xl
-                border
-                p-4
-              "
-                    >
-                      <option>No</option>
-
-                      <option>Yes</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="font-semibold">Special Note</label>
-
-                    <textarea
-                      rows={6}
-                      placeholder="Additional request..."
-                      className="
-                mt-2
-                w-full
-                rounded-2xl
-                border
-                p-4
-              "
-                    />
-                  </div>
-
-                  <div className="pt-4 flex gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setShowModal(false)}
-                      className="
-                flex-1
-                border
-                rounded-2xl
-                py-4
-              "
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="submit"
-                      className="
-                flex-1
-                rounded-2xl
-                bg-blue-600
-                text-white
-                py-4
-              "
-                    >
-                      Confirm Booking
-                    </button>
-                  </div>
-                </form>
               </div>
             </div>
           </div>
