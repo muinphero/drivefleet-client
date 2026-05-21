@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -11,34 +11,24 @@ export default function PrivateRoute({ children }) {
 
   const router = useRouter();
 
+  const pathname = usePathname();
+
   useEffect(() => {
-    if (!loading && user === null) {
-      router.replace("/login");
+    if (!loading && !user) {
+      router.replace(`/login?redirect=${pathname}`);
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname]);
 
-  // WAIT FOR SESSION
-
-  if (loading || user === undefined) {
+  if (loading) {
     return (
       <section className="min-h-[70vh] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin" />
-
-          <p className="text-gray-500">Loading...</p>
-        </div>
+        <div className="w-10 h-10 rounded-full border-4 border-gray-300 border-t-blue-600 animate-spin" />
       </section>
     );
   }
 
-  // REDIRECT IN PROGRESS
-
-  if (user === null) {
-    return (
-      <section className="min-h-[70vh] flex items-center justify-center">
-        <p className="text-gray-500">Redirecting...</p>
-      </section>
-    );
+  if (!user) {
+    return null;
   }
 
   return children;

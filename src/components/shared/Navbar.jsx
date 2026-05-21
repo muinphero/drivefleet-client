@@ -49,6 +49,12 @@ export default function Navbar() {
     try {
       await authClient.signOut();
 
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/logout`, {
+        method: "POST",
+
+        credentials: "include",
+      });
+
       closeAll();
 
       toast.success("Logged out");
@@ -62,6 +68,7 @@ export default function Navbar() {
   const publicLinks = [
     {
       name: "Home",
+
       href: "/",
     },
 
@@ -75,8 +82,6 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur">
       <div className="container-width h-[72px] flex items-center">
-        {/* LOGO */}
-
         <Link href="/" className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-lg">
             🚘
@@ -88,8 +93,6 @@ export default function Navbar() {
             <p className="text-xs text-gray-500">Rent • Drive • Explore</p>
           </div>
         </Link>
-
-        {/* DESKTOP */}
 
         <div className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] flex-1 items-center">
           <div />
@@ -187,8 +190,6 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* MOBILE */}
-
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="ml-auto lg:hidden"
@@ -196,6 +197,8 @@ export default function Navbar() {
           {mobileMenuOpen ? <X /> : <Menu />}
         </button>
       </div>
+
+      {/* RESTORED MOBILE MENU */}
 
       {mobileMenuOpen && (
         <div

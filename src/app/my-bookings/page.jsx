@@ -35,20 +35,34 @@ export default function MyBookingsPage() {
           },
         );
 
+        if (!response.ok) {
+          setBookings([]);
+
+          return;
+        }
+
         const data = await response.json();
 
-        setBookings(Array.isArray(data) ? data : data.bookings || []);
+        setBookings(Array.isArray(data) ? data : []);
       } catch {
         toast.error("Unable to load bookings");
+
+        setBookings([]);
       } finally {
         setPageLoading(false);
       }
     }
 
-    if (user?.email) {
-      fetchBookings();
+    if (loading) return;
+
+    if (!user?.email) {
+      setPageLoading(false);
+
+      return;
     }
-  }, [user]);
+
+    fetchBookings();
+  }, [user, loading]);
 
   function openCancelModal(booking) {
     setSelectedBooking(booking);
@@ -77,9 +91,11 @@ export default function MyBookingsPage() {
         prev.filter((item) => item._id !== selectedBooking._id),
       );
 
-      toast.success("Booking cancelled");
-
       setShowModal(false);
+
+      setSelectedBooking(null);
+
+      toast.success("Booking cancelled");
     } catch {
       toast.error("Cancel failed");
     } finally {
@@ -113,13 +129,7 @@ export default function MyBookingsPage() {
             {bookings.map((booking) => (
               <div
                 key={booking._id}
-                className="
-                    rounded-3xl
-                    overflow-hidden
-                    border
-                    bg-white
-                    shadow-sm
-                  "
+                className="rounded-3xl overflow-hidden border bg-white shadow-sm"
               >
                 <div className="relative h-60">
                   <Image
@@ -127,9 +137,7 @@ export default function MyBookingsPage() {
                       booking.carImage ||
                       "https://images.unsplash.com/photo-1503376780353-7e6692767b70"
                     }
-                    alt={
-                      booking.carName || booking.carModel || "Booked car image"
-                    }
+                    alt={booking.carName || "Booked car"}
                     fill
                     unoptimized
                     className="object-cover"
@@ -138,7 +146,7 @@ export default function MyBookingsPage() {
 
                 <div className="p-6">
                   <h2 className="text-2xl font-bold">
-                    {booking.carName || booking.carModel || "Booked Car"}
+                    {booking.carName || "Booked Car"}
                   </h2>
 
                   <div className="mt-4 space-y-2 text-gray-600">
@@ -146,19 +154,15 @@ export default function MyBookingsPage() {
                       Total Price:
                       <span className="font-semibold">
                         {" "}
-                        $
-                        {booking.totalPrice ||
-                          booking.dailyRentalPrice ||
-                          booking.price ||
-                          "N/A"}
+                        ${booking.totalPrice || "N/A"}
                       </span>
                     </p>
 
                     <p>
-                      Booking Date:{" "}
+                      Booking Date:
                       <Link
                         href="/my-bookings"
-                        className="text-blue-600 underline"
+                        className="ml-2 text-blue-600 underline"
                       >
                         {new Date(
                           booking.bookingDate || booking.createdAt,
@@ -170,26 +174,14 @@ export default function MyBookingsPage() {
                       Pickup:
                       <span className="font-medium">
                         {" "}
-                        {booking.pickup ||
-                          booking.pickupLocation ||
-                          booking.location ||
-                          "N/A"}
+                        {booking.pickupLocation || "N/A"}
                       </span>
                     </p>
                   </div>
 
                   <button
                     onClick={() => openCancelModal(booking)}
-                    className="
-                        mt-6
-                        w-full
-                        rounded-2xl
-                        bg-red-500
-                        hover:bg-red-600
-                        text-white
-                        py-3
-                        transition
-                      "
+                    className="mt-6 w-full rounded-2xl bg-red-500 py-3 text-white"
                   >
                     Cancel Booking
                   </button>
@@ -200,41 +192,17 @@ export default function MyBookingsPage() {
         )}
 
         {showModal && (
-          <div
-            className="
-              fixed
-              inset-0
-              z-50
-              bg-black/50
-              flex
-              items-center
-              justify-center
-              p-4
-            "
-          >
-            <div
-              className="
-                bg-white
-                rounded-3xl
-                p-8
-                w-full
-                max-w-md
-              "
-            >
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-8 w-full max-w-md">
               <h2 className="text-2xl font-bold">Cancel Booking?</h2>
 
-              <p className="mt-3 text-gray-600">{selectedBooking?.carName}</p>
+              <p className="mt-3">{selectedBooking?.carName}</p>
 
               <div className="mt-8 flex gap-3">
                 <button
                   disabled={cancelLoading}
                   onClick={() => setShowModal(false)}
-                  className="
-                    flex-1
-                    border
-                    rounded-2xl
-                    py-3
-                  "
+                  className="flex-1 border rounded-2xl py-3"
                 >
                   Keep
                 </button>
@@ -242,13 +210,7 @@ export default function MyBookingsPage() {
                 <button
                   disabled={cancelLoading}
                   onClick={handleCancelBooking}
-                  className="
-                    flex-1
-                    rounded-2xl
-                    bg-red-500
-                    text-white
-                    py-3
-                  "
+                  className="flex-1 rounded-2xl bg-red-500 text-white py-3"
                 >
                   {cancelLoading ? "Cancelling..." : "Confirm"}
                 </button>

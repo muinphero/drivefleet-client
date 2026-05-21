@@ -1,22 +1,23 @@
-import { Poppins } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "sonner";
-import Providers from "@/providers/Providers";
-import { AuthProvider } from "@/providers/AuthProvider";
 
-import { HeroUIProvider } from "@heroui/react";
+import { Poppins } from "next/font/google";
 
 import Navbar from "@/components/shared/Navbar";
-import Footer from "@/components/shared/Footer";
+
+import Providers from "@/providers/Providers";
+
+import { AuthProvider } from "@/providers/AuthProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
+
   weight: ["400", "500", "600", "700"],
 });
 
 export const metadata = {
   title: "DriveFleet",
-  description: "Modern car rental platform",
+
+  description: "Rent • Drive • Explore",
 };
 
 export default function RootLayout({ children }) {
@@ -28,21 +29,8 @@ export default function RootLayout({ children }) {
             <Navbar />
 
             <main className="min-h-screen">{children}</main>
-
-            <Footer />
           </Providers>
         </AuthProvider>
-        <Toaster
-          position="top-center"
-          richColors
-          expand={false}
-          closeButton
-          offset={90}
-          duration={1800}
-          toastOptions={{
-            className: "!z-[40] !rounded-2xl",
-          }}
-        />
       </body>
     </html>
   );

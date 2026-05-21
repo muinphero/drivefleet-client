@@ -4,43 +4,41 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(undefined);
+  const [user, setUser] = useState(null);
 
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let mounted = true;
+  async function refreshSession() {
+    try {
+      const session = await authClient.getSession();
 
-    async function load() {
-      try {
-        const session = await authClient.getSession();
+      setUser(session?.data?.user ?? null);
+    } catch (error) {
+      console.error(error);
 
-        if (!mounted) return;
-
-        setUser(session?.data?.user ?? null);
-      } catch {
-        if (mounted) setUser(null);
-      } finally {
-        if (mounted) setLoading(false);
-      }
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    load();
-
-    return () => {
-      mounted = false;
-    };
+  useEffect(() => {
+    refreshSession();
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        loading,
+
         setUser,
+
+        loading,
+
+        refreshSession,
       }}
     >
       {children}
@@ -48,4 +46,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  return useContext(AuthContext);
+}

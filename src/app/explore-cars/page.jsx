@@ -17,41 +17,27 @@ export default function ExploreCarsPage() {
 
   const [availability, setAvailability] = useState("");
 
-  const [sort, setSort] = useState("");
-
   const [vehicleType, setVehicleType] = useState("");
 
+  const [sort, setSort] = useState("");
+
   useEffect(() => {
-    const fetchCars = async () => {
+    const timer = setTimeout(async () => {
       try {
         setPageLoading(true);
 
-        const api = process.env.NEXT_PUBLIC_API_URL;
+        const query = new URLSearchParams();
 
-        if (!api) {
-          throw new Error("NEXT_PUBLIC_API_URL missing");
-        }
+        if (search) query.append("search", search);
 
-        const queryParams = new URLSearchParams();
+        if (availability) query.append("availability", availability);
 
-        if (search) {
-          queryParams.append("search", search);
-        }
+        if (vehicleType) query.append("vehicleType", vehicleType);
 
-        if (availability) {
-          queryParams.append("availability", availability);
-        }
+        if (sort) query.append("sort", sort);
 
-        if (vehicleType) {
-          queryParams.append("vehicleType", vehicleType);
-        }
-
-        if (sort) {
-          queryParams.append("sort", sort);
-        }
-
-        const response = await fetch(
-          `${api}/api/cars?${queryParams.toString()}`,
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/cars?${query}`,
           {
             credentials: "include",
 
@@ -59,59 +45,30 @@ export default function ExploreCarsPage() {
           },
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to load cars");
-        }
+        const data = await res.json();
 
-        const data = await response.json();
-
-        setCars(Array.isArray(data) ? data : data.cars || []);
-      } catch (error) {
-        console.error(error);
+        setCars(Array.isArray(data) ? data : []);
+      } catch {
+        toast.error("Failed to load cars");
 
         setCars([]);
-
-        toast.error("Unable to load cars");
       } finally {
         setPageLoading(false);
       }
-    };
+    }, 300);
 
-    fetchCars();
-  }, [search, availability, sort, vehicleType]);
-
-  if (pageLoading) {
-    return (
-      <section className="container-width py-20">
-        <div className="flex justify-center">
-          <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
-        </div>
-      </section>
-    );
-  }
-
-  if (cars.length === 0) {
-    return (
-      <section className="container-width py-20 text-center">
-        <h1 className="text-3xl font-bold">No cars found</h1>
-
-        <p className="text-gray-500 mt-2">Try changing filters</p>
-      </section>
-    );
-  }
+    return () => clearTimeout(timer);
+  }, [search, availability, vehicleType, sort]);
 
   return (
     <section className="container-width py-14">
       <h1 className="text-4xl font-bold mb-10">Explore Cars</h1>
 
-      {/* FILTERS */}
-
       <div className="grid md:grid-cols-4 gap-4 mb-10">
         <input
-          type="text"
-          placeholder="Search by brand or model"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by car name"
           className="border rounded-xl p-4"
         />
 
@@ -136,9 +93,9 @@ export default function ExploreCarsPage() {
 
           <option value="Sedan">Sedan</option>
 
-          <option value="Sports">Sports</option>
-
           <option value="Luxury">Luxury</option>
+
+          <option value="Sports">Sports</option>
         </select>
 
         <select
@@ -146,7 +103,7 @@ export default function ExploreCarsPage() {
           onChange={(e) => setSort(e.target.value)}
           className="border rounded-xl p-4"
         >
-          <option value="">Sort By Price</option>
+          <option value="">Sort Price</option>
 
           <option value="asc">Low → High</option>
 
@@ -154,75 +111,54 @@ export default function ExploreCarsPage() {
         </select>
       </div>
 
-      {/* GRID */}
+      {pageLoading ? (
+        <div className="text-center">Loading...</div>
+      ) : (
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8">
+          {cars.map((car) => (
+            <div key={car._id} className="rounded-3xl border overflow-hidden">
+              <div className="relative h-60">
+                <Image
+                  src={car.imageUrl}
+                  alt={car.model}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+              </div>
 
-      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8">
-        {cars.map((car) => (
-          <div
-            key={car._id}
-            className="
-              overflow-hidden
-              rounded-3xl
-              border
-              bg-white
-              hover:shadow-lg
-              transition
-            "
-          >
-            <div className="relative h-60">
-              <Image
-                src={
-                  car.imageUrl ||
-                  "https://images.unsplash.com/photo-1503376780353-7e6692767b70"
-                }
-                alt={car.model}
-                fill
-                unoptimized
-                className="object-cover"
-              />
-            </div>
+              <div className="p-5">
+                <h2 className="text-2xl font-bold">
+                  {car.brand} {car.model}
+                </h2>
 
-            <div className="p-5 space-y-2">
-              <h2 className="text-2xl font-bold">
-                {car.brand} {car.model}
-              </h2>
+                <p>Type: {car.vehicleType}</p>
 
-              <p>Type: {car.vehicleType}</p>
+                <p>Daily: ${car.dailyRentalPrice}</p>
 
-              <p>Daily: ${car.dailyRentalPrice}</p>
+                <p>Bookings: {car.bookingCount || 0}</p>
 
-              <p>Bookings: {car.bookingCount || 0}</p>
+                <p>Owner: {car.ownerName}</p>
 
-              <p>Owner: {car.ownerName}</p>
-
-              <div>
-                <span
+                <p
                   className={
                     car.availability ? "text-green-600" : "text-red-600"
                   }
                 >
                   {car.availability ? "Available" : "Unavailable"}
-                </span>
-              </div>
+                </p>
 
-              <Link
-                href={`/car/${car._id}`}
-                className="
-                  mt-4
-                  block
-                  rounded-xl
-                  bg-blue-600
-                  py-3
-                  text-center
-                  text-white
-                "
-              >
-                View Details
-              </Link>
+                <Link
+                  href={`/car/${car._id}`}
+                  className="mt-4 block rounded-xl bg-blue-600 py-3 text-center text-white"
+                >
+                  Details
+                </Link>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
