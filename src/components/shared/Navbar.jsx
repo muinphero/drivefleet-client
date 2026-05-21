@@ -13,7 +13,7 @@ import { authClient } from "@/lib/auth-client";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Navbar() {
-  const { user, isPending } = useAuth();
+  const { user, loading } = useAuth();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -74,7 +74,7 @@ export default function Navbar() {
 
           {/* RIGHT SIDE */}
           <div className="flex items-center gap-5 relative">
-            {!isPending && user ? (
+            {!loading && user ? (
               <>
                 {/* PROFILE */}
                 <button
@@ -188,7 +188,7 @@ export default function Navbar() {
             ))}
           </div>
 
-          {!isPending && user ? (
+          {!loading && user ? (
             <>
               <div className="border-t pt-6 space-y-4">
                 <Link

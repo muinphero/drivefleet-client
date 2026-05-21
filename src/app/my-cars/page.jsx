@@ -36,8 +36,6 @@ export default function MyCarsPage() {
 
         const data = await response.json();
 
-        console.log(data);
-
         setCars(Array.isArray(data) ? data : data.cars || []);
       } catch (error) {
         console.error(error);
@@ -51,7 +49,7 @@ export default function MyCarsPage() {
     if (user?.email) {
       fetchCars();
     }
-  }, [user, loading]);
+  }, [user?.email]);
 
   // OPEN DELETE MODAL
   const openDeleteModal = (carId) => {

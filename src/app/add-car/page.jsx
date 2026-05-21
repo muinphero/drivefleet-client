@@ -17,11 +17,7 @@ export default function AddCarPage() {
 
   const [formLoading, setFormLoading] = useState(false);
 
-  // useEffect(() => {
-  //   if (!isPending && !user) {
-  //     router.push("/login");
-  //   }
-  // }, [user, isPending, router]);
+ 
 
   const handleAddCar = async (e) => {
     e.preventDefault();

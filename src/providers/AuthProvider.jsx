@@ -1,14 +1,12 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-
 import { authClient } from "@/lib/auth-client";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,6 +17,7 @@ export function AuthProvider({ children }) {
         setUser(session?.data?.user || null);
       } catch (error) {
         console.error(error);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -31,8 +30,8 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user,
-        setUser,
         loading,
+        setUser,
       }}
     >
       {children}

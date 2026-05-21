@@ -38,7 +38,7 @@ export default function LoginPage() {
 
         password,
 
-        callbackURL: "/",
+        callbackURL: process.env.NEXT_PUBLIC_CLIENT_URL,
       });
 
       if (error) {

@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/providers/AuthProvider";
+import LoadingSpinner from "./shared/LoadingSpinner";
 
 export default function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -13,17 +14,13 @@ export default function PrivateRoute({ children }) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [loading, user, router]);
 
   // SHOW LOADER WHILE CHECKING SESSION
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   // PREVENT WHITE FLASH
