@@ -90,9 +90,11 @@ export default function LoginContent() {
       await authClient.signIn.social({
         provider: "google",
 
-        callbackURL: process.env.NEXT_PUBLIC_BASE_URL || "/",
+        callbackURL: redirect,
       });
-    } catch {
+    } catch (error) {
+      console.error(error);
+
       toast.error("Google login failed");
 
       setLoading(false);
