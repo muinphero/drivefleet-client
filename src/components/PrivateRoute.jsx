@@ -4,8 +4,7 @@ import { useEffect } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { useAuth } from "@/providers/AuthProvider";
-import LoadingSpinner from "./shared/LoadingSpinner";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -16,20 +15,18 @@ export default function PrivateRoute({ children }) {
     if (!loading && !user) {
       router.replace("/login");
     }
-  }, [loading, user, router]);
+  }, [user, loading, router]);
 
-  // SHOW LOADER WHILE CHECKING SESSION
   if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  // PREVENT WHITE FLASH
-  if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">Redirecting...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin" />
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return children;

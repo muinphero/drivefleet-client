@@ -1,29 +1,38 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+
 import { authClient } from "@/lib/auth-client";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(undefined);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getSession = async () => {
+    let mounted = true;
+
+    async function load() {
       try {
         const session = await authClient.getSession();
 
-        setUser(session?.data?.user || null);
-      } catch (error) {
-        console.error(error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+        if (!mounted) return;
 
-    getSession();
+        setUser(session?.data?.user ?? null);
+      } catch {
+        if (mounted) setUser(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (

@@ -32,7 +32,16 @@ export default function RootLayout({ children }) {
             <Footer />
           </Providers>
         </AuthProvider>
-        <Toaster position="top-right" richColors />
+        <Toaster
+          position="top-center"
+          richColors
+          expand={false}
+          closeButton
+          offset={90}
+          toastOptions={{
+            className: "!z-[40] !rounded-2xl",
+          }}
+        />
       </body>
     </html>
   );

@@ -28,3 +28,18 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+html {
+  font-size: 15px;
+}
+
+body {
+  font-weight: 400;
+  color: #111827;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.03em;
+}

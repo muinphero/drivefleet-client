@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import { Menu, X, ChevronDown } from "lucide-react";
 
@@ -19,14 +18,40 @@ export default function Navbar() {
 
   const [profileOpen, setProfileOpen] = useState(false);
 
+  const mobileMenuRef = useRef(null);
+
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
+        setMobileMenuOpen(false);
+      }
+
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutside);
+
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, []);
+
   const handleLogout = async () => {
-    await authClient.signOut();
+    try {
+      await authClient.signOut();
 
-    toast.success("Logged out");
+      toast.success("Logged out");
 
-    setMobileMenuOpen(false);
+      setProfileOpen(false);
 
-    setProfileOpen(false);
+      setMobileMenuOpen(false);
+
+      window.location.href = "/";
+    } catch {
+      toast.error("Logout failed");
+    }
   };
 
   const publicLinks = [
@@ -39,102 +64,93 @@ export default function Navbar() {
       name: "Explore Cars",
       href: "/explore-cars",
     },
-
-    {
-      name: "Add Car",
-      href: "/add-car",
-    },
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
-      <div className="container-width h-20 flex items-center justify-between">
+    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b">
+      <div className="container-width h-[72px] flex items-center">
         {/* LOGO */}
-        <Link
-          href="/"
-          className="text-4xl font-extrabold text-blue-600 tracking-tight"
-        >
-          DriveFleet
+
+        <Link href="/" className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-lg">
+            🚘
+          </div>
+
+          <div>
+            <h1 className="text-[30px] font-black leading-none">DriveFleet</h1>
+
+            <p className="text-xs text-gray-500">Rent • Drive • Explore</p>
+          </div>
         </Link>
 
-        {/* DESKTOP NAV */}
-        <div className="hidden lg:flex items-center gap-14">
-          {/* CENTER LINKS */}
-          <div className="flex items-center gap-8 font-medium text-lg">
+        {/* DESKTOP */}
+
+        <div className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] flex-1 items-center">
+          <div />
+
+          <div className="flex justify-center gap-10">
             {publicLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="hover:text-blue-600 transition duration-200"
+                className="font-medium hover:text-blue-600"
               >
                 {link.name}
               </Link>
             ))}
           </div>
 
-          {/* RIGHT SIDE */}
-          <div className="flex items-center gap-5 relative">
-            {!loading && user ? (
+          <div ref={profileRef} className="flex justify-end min-w-[260px]">
+            {loading ? (
+              <div className="h-[46px] w-[180px]" />
+            ) : user ? (
               <>
-                {/* PROFILE */}
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-3 hover:bg-gray-100 px-3 py-2 rounded-2xl transition"
+                  className="h-[46px] px-3 rounded-xl flex items-center gap-3 hover:bg-gray-100"
                 >
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-lg">
+                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center">
                     {user.name?.charAt(0)}
                   </div>
 
-                  <div className="text-left">
-                    <p className="font-semibold leading-none">{user.name}</p>
-
-                    <p className="text-xs text-gray-500">Profile</p>
-                  </div>
+                  <span>{user.name}</span>
 
                   <ChevronDown size={18} />
                 </button>
 
-                {/* DROPDOWN */}
                 {profileOpen && (
-                  <div className="absolute right-0 top-16 w-72 bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-hidden">
-                    {/* USER INFO */}
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold text-2xl">
-                          {user.name?.charAt(0)}
-                        </div>
+                  <div className="absolute top-[72px] right-6 w-72 rounded-2xl bg-white border shadow-xl overflow-hidden">
+                    <div className="p-5 bg-blue-600 text-white">
+                      <h3 className="font-bold">{user.name}</h3>
 
-                        <div>
-                          <h3 className="font-bold text-lg">{user.name}</h3>
-
-                          <p className="text-sm text-blue-100 break-all">
-                            {user.email}
-                          </p>
-                        </div>
-                      </div>
+                      <p className="text-sm">{user.email}</p>
                     </div>
 
-                    {/* LINKS */}
-                    <div className="p-3 flex flex-col">
+                    <div className="p-2">
+                      <Link
+                        href="/add-car"
+                        className="block px-4 py-3 rounded-xl hover:bg-gray-50"
+                      >
+                        Add Car
+                      </Link>
+
                       <Link
                         href="/my-cars"
-                        onClick={() => setProfileOpen(false)}
-                        className="px-4 py-3 rounded-2xl hover:bg-blue-50 transition font-medium"
+                        className="block px-4 py-3 rounded-xl hover:bg-gray-50"
                       >
                         My Cars
                       </Link>
 
                       <Link
                         href="/my-bookings"
-                        onClick={() => setProfileOpen(false)}
-                        className="px-4 py-3 rounded-2xl hover:bg-blue-50 transition font-medium"
+                        className="block px-4 py-3 rounded-xl hover:bg-gray-50"
                       >
                         My Bookings
                       </Link>
 
                       <button
                         onClick={handleLogout}
-                        className="text-left px-4 py-3 rounded-2xl hover:bg-red-50 text-red-500 transition font-medium"
+                        className="w-full text-left px-4 py-3 rounded-xl text-red-500 hover:bg-red-50"
                       >
                         Logout
                       </button>
@@ -143,109 +159,91 @@ export default function Navbar() {
                 )}
               </>
             ) : (
-              <>
+              <div className="flex gap-3">
                 <Link
                   href="/login"
-                  className="hover:text-blue-600 transition font-medium text-lg"
+                  className="h-[44px] px-5 border rounded-xl flex items-center"
                 >
                   Login
                 </Link>
 
                 <Link
                   href="/register"
-                  className="bg-blue-600 hover:bg-blue-700 transition text-white px-6 py-3 rounded-2xl font-semibold shadow-lg"
+                  className="h-[44px] px-5 rounded-xl bg-blue-600 text-white flex items-center"
                 >
                   Register
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </div>
 
-        {/* MOBILE BUTTON */}
+        {/* MOBILE */}
+
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden"
+          className="ml-auto lg:hidden"
         >
-          {mobileMenuOpen ? <X size={32} /> : <Menu size={32} />}
+          {mobileMenuOpen ? <X /> : <Menu />}
         </button>
       </div>
 
-      {/* MOBILE MENU */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t bg-white px-6 py-6 space-y-6">
-          {/* LINKS */}
-          <div className="space-y-4">
+        <div
+          ref={mobileMenuRef}
+          className="lg:hidden absolute top-[68px] right-3 w-[250px] rounded-2xl bg-white border shadow-xl"
+        >
+          <div className="p-3">
             {publicLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-lg font-medium"
+                className="block px-3 py-2 rounded-xl"
               >
                 {link.name}
               </Link>
             ))}
+
+            {!loading &&
+              (user ? (
+                <>
+                  <Link href="/add-car" className="block px-3 py-2">
+                    Add Car
+                  </Link>
+
+                  <Link href="/my-cars" className="block px-3 py-2">
+                    My Cars
+                  </Link>
+
+                  <Link href="/my-bookings" className="block px-3 py-2">
+                    My Bookings
+                  </Link>
+
+                  <button
+                    onClick={handleLogout}
+                    className="mt-3 w-full h-9 rounded-xl bg-red-500 text-white"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <Link
+                    href="/login"
+                    className="h-9 border rounded-xl flex items-center justify-center"
+                  >
+                    Login
+                  </Link>
+
+                  <Link
+                    href="/register"
+                    className="h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center"
+                  >
+                    Register
+                  </Link>
+                </div>
+              ))}
           </div>
-
-          {!loading && user ? (
-            <>
-              <div className="border-t pt-6 space-y-4">
-                <Link
-                  href="/my-cars"
-                  className="block text-lg font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  My Cars
-                </Link>
-
-                <Link
-                  href="/my-bookings"
-                  className="block text-lg font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  My Bookings
-                </Link>
-              </div>
-
-              <div className="border-t pt-6 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
-                  {user.name?.charAt(0)}
-                </div>
-
-                <div>
-                  <p className="font-semibold">{user.name}</p>
-
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                </div>
-              </div>
-
-              <button
-                onClick={handleLogout}
-                className="w-full bg-red-500 hover:bg-red-600 transition text-white py-3 rounded-2xl font-semibold"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <div className="border-t pt-6 space-y-4">
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-lg font-medium"
-              >
-                Login
-              </Link>
-
-              <Link
-                href="/register"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-center bg-blue-600 hover:bg-blue-700 transition text-white py-3 rounded-2xl font-semibold"
-              >
-                Register
-              </Link>
-            </div>
-          )}
         </div>
       )}
     </nav>

@@ -16,17 +16,16 @@ export default function FeaturedCars() {
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/cars`,
-          {
-            credentials: "include",
-          },
         );
+
+        if (!response.ok) return;
 
         const data = await response.json();
 
         // Show only first 6 featured cars
         setCars(data.slice(0, 6));
       } catch (error) {
-        console.error(error);
+        console.log("Cars unavailable");
       } finally {
         setPageLoading(false);
       }

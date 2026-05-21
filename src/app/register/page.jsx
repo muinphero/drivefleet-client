@@ -13,12 +13,12 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 
 export default function RegisterPage() {
-  `${process.env.NEXT_PUBLIC_API_URL}/api/cars`;
-
   const [formLoading, setFormLoading] = useState(false);
 
   const [googleLoading, setGoogleLoading] = useState(false);
+
   const router = useRouter();
+
   const handleRegister = async (e) => {
     e.preventDefault();
 
@@ -30,13 +30,10 @@ export default function RegisterPage() {
 
     const name = formData.get("name");
 
-    const image = formData.get("image");
-
     const email = formData.get("email");
 
     const password = formData.get("password");
 
-    // PASSWORD VALIDATION
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters");
 
@@ -46,7 +43,7 @@ export default function RegisterPage() {
     }
 
     if (!/[A-Z]/.test(password)) {
-      toast.error("Password must contain at least one uppercase letter");
+      toast.error("Password needs uppercase");
 
       setFormLoading(false);
 
@@ -54,7 +51,7 @@ export default function RegisterPage() {
     }
 
     if (!/[a-z]/.test(password)) {
-      toast.error("Password must contain at least one lowercase letter");
+      toast.error("Password needs lowercase");
 
       setFormLoading(false);
 
@@ -62,29 +59,21 @@ export default function RegisterPage() {
     }
 
     try {
-      const { data, error } = await authClient.signUp.email({
+      const { error } = await authClient.signUp.email({
+        email,
+        password,
         name,
 
-        email,
-
-        password,
-
-        image,
-
-        callbackURL: "/",
+        callbackURL: "http://localhost:3000",
       });
 
       if (error) {
         toast.error(error.message || "Registration failed");
 
-        setFormLoading(false);
-
         return;
       }
 
       toast.success("Registration successful");
-
-      console.log(data);
 
       form.reset();
 
@@ -105,112 +94,95 @@ export default function RegisterPage() {
       await authClient.signIn.social({
         provider: "google",
 
-        callbackURL: "/",
+        callbackURL: "http://localhost:3000",
+
+        newUserCallbackURL: "http://localhost:3000",
       });
     } catch (error) {
       console.error(error);
 
-      toast.error("Google login failed");
-    } finally {
       setGoogleLoading(false);
+
+      toast.error("Google login failed");
     }
   };
 
   return (
     <section className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md border rounded-3xl p-8 shadow-sm bg-white">
-        {/* HEADER */}
+      <div className="w-full max-w-md rounded-3xl border bg-white p-8 shadow-sm">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Create Account</h1>
+          <h1 className="text-3xl font-bold">Create Account</h1>
 
           <p className="text-gray-500">Join DriveFleet today</p>
         </div>
 
-        {/* REGISTER FORM */}
         <form onSubmit={handleRegister} className="space-y-5">
-          {/* NAME */}
           <input
             name="name"
-            type="text"
+            required
             placeholder="Full Name"
-            required
-            className="w-full border p-4 rounded-2xl outline-none focus:border-blue-500"
+            className="w-full rounded-2xl border p-4"
           />
 
-          {/* PHOTO URL */}
-          <input
-            name="image"
-            type="url"
-            placeholder="Photo URL"
-            required
-            className="w-full border p-4 rounded-2xl outline-none focus:border-blue-500"
-          />
-
-          {/* EMAIL */}
           <input
             name="email"
             type="email"
-            placeholder="Email"
             required
-            className="w-full border p-4 rounded-2xl outline-none focus:border-blue-500"
+            placeholder="Email"
+            className="w-full rounded-2xl border p-4"
           />
 
-          {/* PASSWORD */}
           <input
             name="password"
             type="password"
-            placeholder="Password"
             required
-            className="w-full border p-4 rounded-2xl outline-none focus:border-blue-500"
+            placeholder="Password"
+            className="w-full rounded-2xl border p-4"
           />
 
-          {/* PASSWORD RULES */}
-          <div className="text-sm text-gray-500 space-y-1">
-            <p>• Minimum 6 characters</p>
-
-            <p>• At least one uppercase letter</p>
-
-            <p>• At least one lowercase letter</p>
+          <div className="text-sm text-gray-500">
+            • Minimum 6 chars
+            <br />• Uppercase + lowercase
           </div>
 
-          {/* SUBMIT BUTTON */}
           <button
-            type="submit"
             disabled={formLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 transition text-white py-4 rounded-2xl font-semibold disabled:opacity-50"
+            className="w-full rounded-2xl bg-blue-600 py-4 text-white"
           >
-            {formLoading ? "Creating Account..." : "Register"}
+            {formLoading ? "Creating..." : "Register"}
           </button>
         </form>
 
-        {/* DIVIDER */}
-        <div className="flex items-center gap-4 my-6">
-          <div className="flex-1 h-px bg-gray-200" />
+        <div className="my-6 flex items-center gap-4">
+          <div className="h-px flex-1 bg-gray-200" />
 
-          <span className="text-gray-400 text-sm">OR</span>
+          <span className="text-sm text-gray-400">OR</span>
 
-          <div className="flex-1 h-px bg-gray-200" />
+          <div className="h-px flex-1 bg-gray-200" />
         </div>
 
-        {/* GOOGLE REGISTER */}
         <button
           type="button"
           onClick={handleGoogleRegister}
           disabled={googleLoading}
-          className="w-full border py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-gray-50 transition font-medium disabled:opacity-50"
+          className="w-full rounded-2xl border py-4 flex items-center justify-center gap-3"
         >
-          <FcGoogle size={24} />
-
-          {googleLoading ? "Redirecting..." : "Continue with Google"}
+          {googleLoading ? (
+            <>
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+              Redirecting...
+            </>
+          ) : (
+            <>
+              <FcGoogle size={24} />
+              Continue with Google
+            </>
+          )}
         </button>
 
-        {/* LOGIN */}
-        <p className="text-center mt-8 text-gray-600">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="text-blue-600 font-semibold hover:underline"
-          >
+        <p className="mt-8 text-center">
+          Already have an account?
+          <Link href="/login" className="ml-1 text-blue-600">
             Login
           </Link>
         </p>
