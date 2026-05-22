@@ -4,6 +4,8 @@ import { Poppins } from "next/font/google";
 
 import Navbar from "@/components/shared/Navbar";
 
+import Footer from "@/components/shared/Footer";
+
 import Providers from "@/providers/Providers";
 
 import { AuthProvider } from "@/providers/AuthProvider";
@@ -29,6 +31,7 @@ export default function RootLayout({ children }) {
             <Navbar />
 
             <main className="min-h-screen">{children}</main>
+            <Footer />
           </Providers>
         </AuthProvider>
       </body>

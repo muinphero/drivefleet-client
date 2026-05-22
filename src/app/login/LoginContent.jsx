@@ -49,35 +49,41 @@ export default function LoginContent() {
         disableRedirect: true,
       });
 
-      await refreshSession();
+      await new Promise((r) => setTimeout(r, 500));
 
       const session = await authClient.getSession();
 
-      if (session?.data?.user) {
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt`, {
-          method: "POST",
+      if (!session?.data?.user) {
+        toast.error("Invalid credentials");
 
-          credentials: "include",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify({
-            email: session.data.user.email,
-
-            id: session.data.user.id,
-          }),
-        }).catch(() => {});
+        return;
       }
+
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt`, {
+        method: "POST",
+
+        credentials: "include",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          email: session.data.user.email,
+
+          id: session.data.user.id,
+        }),
+      });
+
+      await refreshSession();
 
       toast.success("Login successful");
 
-      router.push(redirect);
+      router.replace(redirect);
     } catch (error) {
       console.error(error);
 
-      toast.error("Invalid email or password");
+      toast.error("Login failed");
     } finally {
       setLoading(false);
     }
@@ -90,7 +96,7 @@ export default function LoginContent() {
       await authClient.signIn.social({
         provider: "google",
 
-        // callbackURL: redirect,
+        callbackURL: window.location.origin,
       });
     } catch (error) {
       console.error(error);

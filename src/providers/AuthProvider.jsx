@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
 
-const AuthContext = createContext(null);
+const Context = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -13,13 +13,11 @@ export function AuthProvider({ children }) {
 
   async function refreshSession() {
     try {
+      setLoading(true);
+
       const session = await authClient.getSession();
 
       setUser(session?.data?.user ?? null);
-    } catch (error) {
-      console.error(error);
-
-      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -30,11 +28,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider
+    <Context.Provider
       value={{
         user,
-
-        setUser,
 
         loading,
 
@@ -42,10 +38,8 @@ export function AuthProvider({ children }) {
       }}
     >
       {children}
-    </AuthContext.Provider>
+    </Context.Provider>
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => useContext(Context);
