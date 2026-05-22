@@ -54,19 +54,20 @@ export default function AddCarPage() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/cars`,
-        {
-          method: "POST",
+`${process.env.NEXT_PUBLIC_API_URL}/api/cars`,
+{
+method:"POST",
 
-          credentials: "include",
+credentials:"include",
 
-          headers: {
-            "Content-Type": "application/json",
-          },
+headers:{
+"Content-Type":"application/json"
+},
 
-          body: JSON.stringify(carData),
-        },
-      );
+body:
+JSON.stringify(carData),
+}
+)
 
       const result = await response.json();
 

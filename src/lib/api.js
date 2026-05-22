@@ -1,7 +1,50 @@
-import axios from "axios";
+const API =
+process.env
+.NEXT_PUBLIC_API_URL;
 
-export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+export async function api(
+endpoint,
+options={}
+){
 
-  withCredentials: true,
-});
+const res =
+await fetch(
+`${API}${endpoint}`,
+{
+credentials:
+"include",
+
+headers:{
+"Content-Type":
+"application/json",
+
+...(options.headers||{})
+},
+
+...options,
+}
+);
+
+if(
+!res.ok
+){
+
+let err={};
+
+try{
+err=
+await res.json();
+}catch{}
+
+throw new Error(
+err.message ||
+"Request failed"
+);
+
+}
+
+return res.json();
+
+}
+
+export default api;

@@ -1,15 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import Image from "next/image";
-
 import Link from "next/link";
-
 import { toast } from "sonner";
 
 import { useAuth } from "@/providers/AuthProvider";
-
 import PrivateRoute from "@/components/PrivateRoute";
 
 export default function MyCarsPage() {
@@ -37,7 +33,6 @@ export default function MyCarsPage() {
 
         if (!response.ok) {
           setCars([]);
-
           return;
         }
 
@@ -46,7 +41,6 @@ export default function MyCarsPage() {
         setCars(Array.isArray(data) ? data : []);
       } catch {
         toast.error("Failed to fetch cars");
-
         setCars([]);
       } finally {
         setPageLoading(false);
@@ -57,7 +51,6 @@ export default function MyCarsPage() {
 
     if (!user?.email) {
       setPageLoading(false);
-
       return;
     }
 
@@ -66,7 +59,6 @@ export default function MyCarsPage() {
 
   function openDeleteModal(carId) {
     setSelectedCarId(carId);
-
     setShowModal(true);
   }
 
@@ -78,7 +70,6 @@ export default function MyCarsPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/cars/${selectedCarId}`,
         {
           method: "DELETE",
-
           credentials: "include",
         },
       );
@@ -87,7 +78,11 @@ export default function MyCarsPage() {
         throw new Error();
       }
 
-      setCars((prev) => prev.filter((car) => car._id !== selectedCarId));
+      setCars((prev) =>
+        prev.filter(
+          (car) => car._id !== selectedCarId,
+        ),
+      );
 
       setShowModal(false);
 
@@ -102,20 +97,29 @@ export default function MyCarsPage() {
   }
 
   if (loading || pageLoading) {
-    return <section className="container-width py-20">Loading...</section>;
+    return (
+      <section className="container-width py-20">
+        Loading...
+      </section>
+    );
   }
 
   return (
     <PrivateRoute>
       <section className="container-width py-20">
-        <h1 className="mb-10 text-5xl font-bold">My Cars</h1>
+        <h1 className="mb-10 text-5xl font-bold">
+          My Cars
+        </h1>
 
         {cars.length === 0 ? (
           <h2>No cars added yet</h2>
         ) : (
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {cars.map((car) => (
-              <div key={car._id} className="overflow-hidden rounded-2xl border">
+              <div
+                key={car._id}
+                className="overflow-hidden rounded-2xl border"
+              >
                 <div className="relative h-60">
                   <Image
                     src={car.imageUrl}
@@ -131,9 +135,14 @@ export default function MyCarsPage() {
                     {car.brand} {car.model}
                   </h2>
 
-                  <p>Type: {car.vehicleType}</p>
+                  <p>
+                    Type: {car.vehicleType}
+                  </p>
 
-                  <p>Daily Price: ${car.dailyRentalPrice}</p>
+                  <p>
+                    Daily Price: $
+                    {car.dailyRentalPrice}
+                  </p>
 
                   <p>
                     Bookings:
@@ -149,7 +158,9 @@ export default function MyCarsPage() {
                     </Link>
 
                     <button
-                      onClick={() => openDeleteModal(car._id)}
+                      onClick={() =>
+                        openDeleteModal(car._id)
+                      }
                       className="flex-1 rounded-xl bg-red-500 py-3 text-white"
                     >
                       Delete
@@ -162,15 +173,28 @@ export default function MyCarsPage() {
         )}
 
         {showModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-            <div className="bg-white rounded-2xl p-8">
-              <h2 className="text-2xl font-bold">Delete Car</h2>
+          <div className="fixed inset-0 flex items-center justify-center bg-black/50">
+            <div className="rounded-2xl bg-white p-8">
+              <h2 className="text-2xl font-bold">
+                Delete Car
+              </h2>
 
-              <div className="flex gap-4 mt-6">
-                <button onClick={() => setShowModal(false)}>Close</button>
+              <div className="mt-6 flex gap-4">
+                <button
+                  onClick={() =>
+                    setShowModal(false)
+                  }
+                >
+                  Close
+                </button>
 
-                <button disabled={deleteLoading} onClick={handleDeleteCar}>
-                  {deleteLoading ? "Deleting..." : "Confirm Delete"}
+                <button
+                  disabled={deleteLoading}
+                  onClick={handleDeleteCar}
+                >
+                  {deleteLoading
+                    ? "Deleting..."
+                    : "Confirm Delete"}
                 </button>
               </div>
             </div>

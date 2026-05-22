@@ -174,7 +174,7 @@ export default function MyBookingsPage() {
                       Pickup:
                       <span className="font-medium">
                         {" "}
-                        {booking.pickupLocation || "N/A"}
+                        {booking.pickupLocation || booking.pickup || "N/A"}
                       </span>
                     </p>
                   </div>
