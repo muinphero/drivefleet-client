@@ -90,7 +90,7 @@ export default function LoginContent() {
       await authClient.signIn.social({
         provider: "google",
 
-        callbackURL: redirect,
+        // callbackURL: redirect,
       });
     } catch (error) {
       console.error(error);
